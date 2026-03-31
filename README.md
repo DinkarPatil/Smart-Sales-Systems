@@ -23,8 +23,8 @@ A full-stack RAG-powered sales dashboard for multi-company support, featuring ro
 4. Run dev server: `npm run dev`
 
 ### 3. Usage & Admin Bootstrapping
-- **First User**: The very first user to register at `/login` will be automatically assigned the **Admin** role and activated.
-- **Admin**: Log in as Admin to create companies and approve/assign roles to other users.
+- **Admin Registration**: To register as an Admin, users must provide a valid `ADMIN_SECRET_KEY` during registration (found in your `.env` file). These users are automatically activated.
+- **Standard Users**: Users registering without the secret key are assigned the **Sales Representative** role and set to **Inactive**. They must be approved/assigned by an Admin to log in.
 - **Webhook**: Use the `/api/v1/webhook/google-forms` endpoint to connect your Google Forms (using Google Apps Script on the associated Sheet).
 
 ## Features
