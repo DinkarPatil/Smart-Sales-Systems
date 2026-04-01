@@ -5,20 +5,25 @@ from typing import List
 from app.db.database import get_db
 from app.models.models import User, UserRole, Company
 from app.schemas.schemas import UserOut, UserUpdate, CompanyCreate, CompanyOut
-from app.api.endpoints.auth import OAuth2PasswordRequestForm # For reference, but we use Token deps
-
-# We need a dependency to get current admin user
-# For now, let's just make the endpoints. We'll add security deps later.
+from app.api.deps import get_current_active_admin
 
 router = APIRouter()
 
 @router.get("/users", response_model=List[UserOut])
-async def list_users(db: AsyncSession = Depends(get_db)):
+async def list_users(
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin)
+):
     result = await db.execute(select(User))
     return result.scalars().all()
 
 @router.put("/users/{user_id}", response_model=UserOut)
-async def update_user(user_id: str, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def update_user(
+    user_id: str, 
+    user_update: UserUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin)
+):
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if not user:
@@ -36,7 +41,11 @@ async def update_user(user_id: str, user_update: UserUpdate, db: AsyncSession = 
     return user
 
 @router.post("/companies", response_model=CompanyOut)
-async def create_company(company_in: CompanyCreate, db: AsyncSession = Depends(get_db)):
+async def create_company(
+    company_in: CompanyCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin)
+):
     import hashlib
     # Generate a hashed ID as requested
     hashed_id = hashlib.sha256(company_in.name.encode()).hexdigest()[:16]
@@ -53,6 +62,9 @@ async def create_company(company_in: CompanyCreate, db: AsyncSession = Depends(g
     return new_company
 
 @router.get("/companies", response_model=List[CompanyOut])
-async def list_companies(db: AsyncSession = Depends(get_db)):
+async def list_companies(
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin)
+):
     result = await db.execute(select(Company))
     return result.scalars().all()

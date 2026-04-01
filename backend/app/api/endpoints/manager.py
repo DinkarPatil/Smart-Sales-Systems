@@ -3,13 +3,17 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.db.database import get_db
-from app.models.models import User, Company, Product, Query, LeadStat
+from app.models.models import User, Company, Product, Query, LeadStat, UserRole, QueryStatus
 from app.schemas.schemas import QueryOut, LeadStatOut
+from app.api.deps import get_current_active_manager
 
 router = APIRouter()
 
 @router.get("/dashboard-stats")
-async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
+async def get_dashboard_stats(
+    db: AsyncSession = Depends(get_db),
+    current_manager: User = Depends(get_current_active_manager)
+):
     # Number of integrated companies
     result = await db.execute(select(func.count(Company.id)))
     companies_count = result.scalar()
@@ -19,8 +23,12 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
     total_queries = result.scalar()
     
     # Resolved Queries
-    result = await db.execute(select(func.count(Query.id)).where(Query.status == "resolved"))
+    result = await db.execute(select(func.count(Query.id)).where(Query.status == QueryStatus.RESOLVED))
     resolved_queries = result.scalar()
+    
+    # Pending Queries
+    pending_result = await db.execute(select(func.count(Query.id)).where(Query.status == QueryStatus.PENDING))
+    pending_queries = pending_result.scalar()
     
     # Sentiment stats from lead_stats
     result = await db.execute(select(func.count(LeadStat.id)).where(LeadStat.sentiment == "+ve"))
@@ -33,17 +41,24 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
         "integrated_companies": companies_count,
         "total_queries": total_queries,
         "resolved_queries": resolved_queries,
+        "pending_queries": pending_queries,
         "positive_leads": positive_leads,
         "negative_leads": negative_leads
     }
 
 @router.get("/all-queries", response_model=List[QueryOut])
-async def get_all_queries(db: AsyncSession = Depends(get_db)):
+async def get_all_queries(
+    db: AsyncSession = Depends(get_db),
+    current_manager: User = Depends(get_current_active_manager)
+):
     result = await db.execute(select(Query).order_by(Query.created_at.desc()))
     return result.scalars().all()
 
 @router.get("/performance-report")
-async def get_performance_report(db: AsyncSession = Depends(get_db)):
+async def get_performance_report(
+    db: AsyncSession = Depends(get_db),
+    current_manager: User = Depends(get_current_active_manager)
+):
     # Get all sales reps
     reps_result = await db.execute(select(User).where(User.role == UserRole.SALES_REP))
     reps = reps_result.scalars().all()

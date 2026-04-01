@@ -11,8 +11,38 @@ import { Layout } from './components/Layout';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock auto-login or token check could go here
+  useEffect(() => {
+    const checkUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await fetch('http://127.0.0.1:8000/api/v1/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('token');
+          }
+        } catch (error) {
+          console.error("Auth check failed:", error);
+        }
+      }
+      setLoading(false);
+    };
+    checkUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-midnight-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-accent-aurora border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen">

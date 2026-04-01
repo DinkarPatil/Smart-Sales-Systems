@@ -86,44 +86,44 @@ const LoginPage = ({ setUser }) => {
   };
 
   return (
-    <div className="fixed inset-0 w-full min-h-screen bg-slate-50 flex items-center justify-center p-6 overflow-hidden font-sans">
-      {/* Soft Background Accents */}
-      <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary-100/40 rounded-full blur-[80px] animate-pulse-slow"></div>
-      <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-indigo-100/30 rounded-full blur-[80px] animate-pulse-slow"></div>
+    <div className="fixed inset-0 w-full min-h-screen bg-midnight-950 flex items-center justify-center p-6 overflow-hidden font-sans">
+      {/* Aurora Background Accents */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-primary/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-aurora/10 rounded-full blur-[120px] animate-pulse-slow"></div>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-[480px] relative z-20"
       >
         {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-soft group hover:shadow-elevated transition-all">
-             <ShieldCheck size={30} className="text-primary-600 group-hover:scale-110 transition-transform" />
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-midnight-900/50 border border-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl group hover:border-accent-aurora/50 transition-all">
+             <ShieldCheck size={32} className="text-accent-aurora group-hover:scale-110 transition-transform" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sales<span className="text-primary-600 italic">RAG</span> Interface</h2>
-          <p className="text-slate-500 mt-1 text-[10px] font-black uppercase tracking-[0.3em]">Secure Enterprise Intelligence</p>
+          <h2 className="text-3xl font-black text-white tracking-tight">Sales<span className="text-aurora italic">RAG</span></h2>
+          <p className="text-midnight-400 mt-2 text-[10px] font-black uppercase tracking-[0.4em]">Your Intelligent Sales Assistant</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-elevated p-8 lg:p-10 relative overflow-hidden">
+        <div className="glass-panel rounded-[2.5rem] p-8 lg:p-12 relative overflow-hidden group">
           {/* Subtle line decoration */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-indigo-500 to-primary-600"></div>
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-accent-aurora/50 to-transparent group-hover:via-accent-aurora transition-all duration-1000"></div>
           
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              {isLogin ? 'Security Portal Access' : 'Create Access Token'}
+          <div className="mb-10 text-center">
+            <h3 className="text-2xl font-bold text-white tracking-tight">
+              {isLogin ? 'Login' : 'Sign Up'}
             </h3>
-            <p className="text-slate-400 text-[10px] mt-1 font-bold uppercase tracking-widest">Awaiting clearing signals...</p>
+            <p className="text-midnight-400 text-[10px] mt-2 font-bold uppercase tracking-widest">Sign in to continue to your dashboard</p>
           </div>
 
           <AnimatePresence mode="wait">
             {error && (
               <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-xs font-bold"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold"
               >
                 <AlertCircle size={16} className="shrink-0" />
                 <p>{error}</p>
@@ -131,46 +131,46 @@ const LoginPage = ({ setUser }) => {
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Legal Name</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-midnight-400 ml-1">Full Name</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-midnight-500" />
                   <input 
                     type="text" 
                     value={fullName} onChange={e => setFullName(e.target.value)}
-                    placeholder="Enter Profile Name"
-                    className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                    placeholder="Enter your name"
+                    className="input-field pl-12"
                     required
                   />
                 </div>
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Enterprise Email</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-midnight-400 ml-1">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-midnight-500" />
                 <input 
                   type="email" 
                   value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                  className="input-field pl-12"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Access Protocol</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-midnight-400 ml-1">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-midnight-500" />
                 <input 
                   type="password" 
                   value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                  className="input-field pl-12"
                   required
                 />
               </div>
@@ -179,38 +179,38 @@ const LoginPage = ({ setUser }) => {
                   <button 
                     type="button"
                     onClick={() => navigate('/forgot-password')}
-                    className="text-primary-600/60 hover:text-primary-600 text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                    className="text-accent-aurora/60 hover:text-accent-aurora text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    Recover Access Credentials
+                    Forgot password?
                   </button>
                 </div>
               )}
             </div>
 
             {!isLogin && (
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Admin Validation Secret</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-midnight-400 ml-1">Admin Secret Key</label>
                 <div className="relative">
-                  <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-midnight-500" />
                   <input 
                     type="password" 
                     value={adminSecret} onChange={e => setAdminSecret(e.target.value)}
-                    placeholder="Enter Security Secret"
-                    className="w-full bg-slate-50/50 border-dashed border-slate-300 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                    placeholder="Enter secret key"
+                    className="input-field pl-12 border-dashed border-white/10"
                   />
                 </div>
               </div>
             )}
 
-            <div className="pt-4">
+            <div className="pt-6">
               <button 
                 type="submit" 
                 disabled={loading}
-                className="group w-full py-4 bg-primary-600 hover:bg-primary-700 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] text-white shadow-lg shadow-primary-100 transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
+                className="btn-primary w-full"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
-                    {isLogin ? 'Grant Access' : 'Initialize Profile'}
+                    <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -218,18 +218,18 @@ const LoginPage = ({ setUser }) => {
             </div>
           </form>
 
-          <div className="mt-8 text-center pt-6 border-t border-slate-50">
+          <div className="mt-10 text-center pt-8 border-t border-white/5">
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className="text-slate-400 hover:text-primary-600 text-[9px] font-black uppercase tracking-[0.25em] transition-all cursor-pointer"
+              className="text-midnight-400 hover:text-accent-aurora text-[10px] font-black uppercase tracking-[0.3em] transition-all cursor-pointer"
             >
-              {isLogin ? "Requirement: New Clearance" : "Existing Credentials Match"}
+              {isLogin ? "Need an account? Sign up" : "Already have an account? Log in"}
             </button>
           </div>
         </div>
 
-        <div className="mt-10 text-center text-[10px] font-bold uppercase tracking-[0.4em] text-slate-300/60">
-          Secure Node 2.0.4 • 2026-03-31
+        <div className="mt-12 text-center text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">
+          Midnight & Aurora v2.0 • Secured Data Node
         </div>
       </motion.div>
     </div>
@@ -237,3 +237,4 @@ const LoginPage = ({ setUser }) => {
 };
 
 export default LoginPage;
+

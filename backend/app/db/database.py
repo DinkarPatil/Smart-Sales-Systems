@@ -13,7 +13,6 @@ async def get_db():
 
 # Helper to initialize the DB is also good
 async def init_db():
+    from app.models.models import User, Company, Product, Query, LeadStat
     async with engine.begin() as conn:
-        # Import models here to ensure they are registered
-        # from app.models import ...
         await conn.run_sync(Base.metadata.create_all)

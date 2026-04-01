@@ -17,6 +17,9 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       }
-    }
+    },
+    hmr: {
+      overlay: false, // Disable overlay to see if it allows the build to continue
+    },
   }
 })

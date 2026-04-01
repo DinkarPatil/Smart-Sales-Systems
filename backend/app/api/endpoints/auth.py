@@ -103,11 +103,11 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     if is_admin:
         await send_response_email(
             email_to=new_user.email,
-            subject="🚀 Administrative Clearance Granted",
+            subject="🚀 Admin Access Granted",
             body=(
                 f"Hello {new_user.full_name},<br><br>"
-                "You have been successfully onboarded as a <b>System Administrator</b> for the Sales RAG Platform.<br>"
-                "You now have unrestricted access to the Admin Panel and command center functions."
+                "You have been successfully added as a <b>System Administrator</b> for the Sales RAG Platform.<br>"
+                "You now have full access to the Admin Dashboard and all system features."
             )
         )
 

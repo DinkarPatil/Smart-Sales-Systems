@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, FileText, Settings, Plus, Download, Trash2, X, Save, Loader2, AlertCircle, Sparkles, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Package, FileText, Settings, Plus, Download, Trash2, X, Save, Loader2, AlertCircle, Sparkles, ChevronRight, LayoutGrid, Copy, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const OwnerDashboard = () => {
@@ -11,6 +11,7 @@ const OwnerDashboard = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState({ name: '', description: '', manual_content: '' });
 
@@ -83,7 +84,7 @@ const OwnerDashboard = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Delete this unit and all its RAG context?')) return;
+    if (!window.confirm('Delete this product and its documentation?')) return;
     try {
       const response = await fetch(`${API_BASE}/products/${id}`, {
         method: 'DELETE',
@@ -102,103 +103,122 @@ const OwnerDashboard = () => {
     setShowEditModal(true);
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="space-y-10 max-w-7xl mx-auto pb-20">
+    <div className="space-y-12 max-w-7xl mx-auto pb-20">
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-8 border-b border-slate-200">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-white/5">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 mb-1 flex items-center gap-3">
-             <LayoutGrid className="text-indigo-600" size={32} />
-             Asset & Intelligence Hub
+          <div className="flex items-center gap-2 mb-3">
+             <span className="w-2 h-2 rounded-full bg-accent-primary animate-pulse shadow-indigo-glow"></span>
+             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-midnight-500">Live Inventory</span>
+          </div>
+          <h2 className="text-4xl font-black tracking-tight text-white mb-2 flex items-center gap-4">
+             <LayoutGrid className="text-accent-primary" size={36} />
+             Injected <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary to-accent-aurora italic">Products</span>
           </h2>
-          <p className="text-slate-500 text-sm font-medium">Provision assets and augment RAG intelligence vectors.</p>
+          <p className="text-midnight-400 text-sm font-medium">Manage your product catalog and train the AI on specific documentation.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="btn-glass flex items-center gap-2">
-            <Settings size={20} />
-            <span>Manage Portal</span>
+        <div className="flex items-center gap-4">
+          <button className="px-8 py-4 bg-midnight-900 border border-white/5 rounded-2xl text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-midnight-800 hover:border-white/10 transition-all flex items-center gap-3">
+             <Settings size={18} className="text-accent-aurora" /> Portal Settings
           </button>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="btn-primary flex items-center gap-2"
+            className="px-8 py-4 bg-aurora-gradient rounded-2xl text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-aurora-glow hover:scale-105 transition-all flex items-center gap-3"
           >
             <Plus size={20} />
-            <span>Provision New Asset</span>
+            <span>Add New Product</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Unit Catalog */}
-        <div className="lg:col-span-8 flex flex-col space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Product Catalog */}
+        <div className="lg:col-span-8 flex flex-col space-y-8">
            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                   <Package size={20} />
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-accent-primary/10 rounded-lg">
+                   <Package size={24} className="text-accent-primary" />
                 </div>
-                <h3 className="text-lg font-black uppercase tracking-widest text-slate-800">Unit Catalog</h3>
+                <h3 className="text-xl font-black uppercase tracking-widest text-white">Inventory Management</h3>
               </div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{products.length} Items Live</span>
+              <span className="text-[10px] font-black text-midnight-500 uppercase tracking-widest">{products.length} Products Active</span>
            </div>
 
            {loading ? (
-             <div className="flex flex-col items-center justify-center p-20 bg-white rounded-[2rem] border border-slate-200 border-dashed">
-                <Loader2 size={40} className="text-primary-600 animate-spin mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Scanning Node Assets...</p>
+             <div className="flex flex-col items-center justify-center p-32 bg-midnight-950/20 rounded-[3rem] border border-white/5 backdrop-blur-xl">
+                <div className="relative mb-6">
+                  <Loader2 size={48} className="text-accent-aurora animate-spin" />
+                  <div className="absolute inset-0 blur-xl bg-accent-aurora/20 animate-pulse"></div>
+                </div>
+                <p className="text-midnight-400 font-black uppercase tracking-widest text-[10px] animate-pulse">Syncing Product Database...</p>
              </div>
            ) : products.length === 0 ? (
              <div 
                onClick={() => setShowAddModal(true)}
-               className="flex flex-col items-center justify-center p-20 bg-white rounded-[2.5rem] border border-slate-200 border-dashed group cursor-pointer hover:bg-slate-50 transition-all duration-300 shadow-sm"
+               className="flex flex-col items-center justify-center p-32 bg-midnight-950/20 rounded-[3rem] border border-white/5 border-dashed group cursor-pointer hover:bg-midnight-900/40 transition-all duration-500"
              >
-                <Package className="text-slate-200 group-hover:text-primary-300 transition-colors mb-4" size={56} />
-                <h4 className="text-lg font-black text-slate-500">Zero Injected Assets</h4>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">Injection required to initialize resolution engine</p>
+                <div className="w-24 h-24 bg-midnight-900 rounded-[2rem] flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-2xl border border-white/5">
+                  <Package className="text-midnight-700 group-hover:text-accent-primary transition-colors" size={48} />
+                </div>
+                <h4 className="text-2xl font-black text-white tracking-tight">Empty Catalog</h4>
+                <p className="text-midnight-500 text-xs font-bold uppercase tracking-widest mt-3">Inject your first product to train the AI engine</p>
+                <button className="mt-8 px-6 py-3 bg-midnight-900 border border-white/5 rounded-xl text-accent-aurora text-[10px] font-black uppercase tracking-widest hover:bg-midnight-800 transition-all">Initialize Injection</button>
              </div>
            ) : (
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                {products.map(product => (
                  <motion.div 
                    layout
-                   initial={{ opacity: 0, scale: 0.98 }}
-                   animate={{ opacity: 1, scale: 1 }}
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
                    key={product.id} 
-                   className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-soft group hover:shadow-elevated hover:border-primary-200 transition-all duration-300"
+                   className="bg-midnight-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-8 shadow-2xl group hover:border-accent-primary/30 transition-all duration-500 relative overflow-hidden"
                  >
-                   <div className="flex items-center justify-between mb-4">
-                     <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary-600 border border-slate-100">
-                        <Package size={22} />
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-accent-primary/5 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   
+                   <div className="flex items-center justify-between mb-8 relative z-10">
+                     <div className="w-14 h-14 rounded-[1.25rem] bg-midnight-950 flex items-center justify-center text-accent-primary border border-white/5 shadow-inner">
+                        <Package size={28} />
                      </div>
-                     <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border ${
-                       product.manual_content ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                     <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${
+                       product.manual_content ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-glow/20'
                      }`}>
-                        {product.manual_content ? 'AI Vector Active' : 'RAG Pending'}
+                        {product.manual_content ? 'AI Trained' : 'Needs Doc'}
                      </span>
                    </div>
                    
-                   <div className="mb-6">
-                     <p className="font-black text-slate-900 text-lg leading-tight group-hover:text-primary-600 transition-colors">{product.name}</p>
-                     <p className="text-xs text-slate-500 font-medium mt-1 line-clamp-2 leading-relaxed">{product.description || 'Description signal missing from registry'}</p>
+                   <div className="mb-8 relative z-10">
+                     <p className="font-black text-white text-2xl leading-tight tracking-tight group-hover:text-accent-primary transition-colors">{product.name}</p>
+                     <p className="text-sm text-midnight-400 font-medium mt-3 line-clamp-2 leading-relaxed">{product.description || 'No description provided.'}</p>
                    </div>
 
-                   <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                   <div className="flex items-center justify-between pt-6 border-t border-white/5 relative z-10">
+                      <div className="flex gap-3">
                         <button 
                           onClick={() => openEditModal(product)}
-                          className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" 
-                          title="Augment Context"
+                          className="p-3 bg-midnight-950 text-midnight-500 hover:text-white hover:bg-midnight-800 rounded-2xl border border-white/5 transition-all shadow-xl" 
+                          title="Edit Documentation"
                         >
                           <FileText size={18} />
                         </button>
                         <button 
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" 
-                          title="Terminate Asset"
+                          className="p-3 bg-midnight-950 text-midnight-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl border border-white/5 transition-all shadow-xl" 
+                          title="Remove Product"
                         >
                           <Trash2 size={18} />
                         </button>
                       </div>
-                      <ChevronRight size={18} className="text-slate-300 group-hover:translate-x-1 group-hover:text-primary-400 transition-all" />
+                      <div className="p-2 bg-midnight-950 rounded-xl border border-white/5 group-hover:bg-accent-primary group-hover:text-white transition-all shadow-lg">
+                        <ChevronRight size={18} />
+                      </div>
                    </div>
                  </motion.div>
                ))}
@@ -207,45 +227,52 @@ const OwnerDashboard = () => {
         </div>
 
         {/* Integration Module */}
-        <div className="lg:col-span-4 flex flex-col space-y-6">
-           <div className="flex items-center gap-3 px-2">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                 <Download size={20} />
+        <div className="lg:col-span-4 flex flex-col space-y-8">
+           <div className="flex items-center gap-4 px-2">
+              <div className="p-2 bg-accent-aurora/10 rounded-lg">
+                 <Download size={24} className="text-accent-aurora" />
               </div>
-              <h3 className="text-lg font-black uppercase tracking-widest text-slate-800">Connectivity</h3>
+              <h3 className="text-xl font-black uppercase tracking-widest text-white">Setup & Sync</h3>
            </div>
            
-           <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-soft bg-gradient-to-br from-slate-50 to-white flex flex-col space-y-8">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Global Webhook Endpoint</p>
+           <div className="bg-midnight-950/20 backdrop-blur-2xl rounded-[3rem] border border-white/5 p-10 shadow-2xl space-y-10 border-t-accent-aurora/20">
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center px-1">
+                    <p className="text-[10px] font-black text-midnight-500 uppercase tracking-[0.3em]">Webhook Endpoint</p>
+                    <button onClick={() => copyToClipboard("http://127.0.0.1:8000/api/v1/webhook/google-forms")}>
+                      {copied ? <CheckCircle2 size={12} className="text-emerald-400" /> : <Copy size={12} className="text-midnight-500 hover:text-white" />}
+                    </button>
+                  </div>
                   <div className="group relative">
-                    <code className="block p-4 bg-slate-100 rounded-2xl text-primary-700 font-mono text-[10px] break-all border border-slate-200 group-hover:bg-slate-200 transition-all">
+                    <code className="block p-5 bg-midnight-900 border border-white/5 rounded-2xl text-accent-primary font-mono text-[10px] break-all group-hover:bg-midnight-800 transition-all shadow-inner">
                       http://127.0.0.1:8000/api/v1/webhook/google-forms
                     </code>
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Company Hashed Signature</p>
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-midnight-500 uppercase tracking-[0.3em] ml-1">Your Company ID</p>
                   <div className="group relative">
-                    <code className="block p-4 bg-slate-100 rounded-2xl text-slate-600 font-mono text-[10px] border border-slate-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
-                      {products.length > 0 ? products[0].company_id : 'SIGNAL_INTERRUPTED'}
+                    <code className="block p-5 bg-midnight-900 border border-white/5 rounded-2xl text-white font-mono text-[10px] group-hover:bg-indigo-500/10 group-hover:text-accent-aurora transition-all shadow-inner">
+                      {products.length > 0 ? products[0].company_id : 'NO_DATA_LINK'}
                     </code>
                   </div>
+                  <p className="text-[9px] text-midnight-600 font-bold italic leading-relaxed px-1">Use this ID in your Google Forms to map responses to your company.</p>
                 </div>
               </div>
               
-              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center">
-                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-                    <Sparkles size={20} />
+              <div className="p-8 bg-midnight-900/40 rounded-[2rem] border border-white/5 text-center shadow-inner relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-accent-aurora/5 opacity-0 group-hover:opacity-100 transition-opacity blur-2xl"></div>
+                 <div className="w-14 h-14 rounded-full bg-accent-aurora/20 text-accent-aurora flex items-center justify-center mx-auto mb-6 border border-accent-aurora/30 relative z-10">
+                    <Sparkles size={24} />
                  </div>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">RAG Engine V.02</p>
-                 <p className="text-xs font-bold text-slate-600">Llama Node Active & Scaled</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-midnight-500 mb-2 relative z-10">Neural Engine V2</p>
+                 <p className="text-sm font-black text-white relative z-10 italic">Llama-3 High Latency Active</p>
               </div>
 
-              <button className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-95">
-                Download Integration Spec <ChevronRight size={14} />
+              <button className="w-full py-5 bg-midnight-900 border border-white/5 rounded-[2.5rem] text-[10px] font-black uppercase tracking-[0.3em] text-midnight-400 hover:text-white hover:bg-midnight-800 transition-all flex items-center justify-center gap-4 active:scale-95 shadow-xl border-b-accent-aurora/40">
+                Setup Instructions <ChevronRight size={18} className="text-accent-aurora" />
               </button>
            </div>
         </div>
@@ -254,53 +281,55 @@ const OwnerDashboard = () => {
       {/* Modals */}
       <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-xl bg-white rounded-[3rem] border border-slate-200 p-10 z-10 shadow-elevated"
+              initial={{ scale: 0.9, opacity: 0, rotateX: 10 }} animate={{ scale: 1, opacity: 1, rotateX: 0 }} exit={{ scale: 0.9, opacity: 0, rotateX: 10 }}
+              className="w-full max-w-xl bg-midnight-950 border border-white/10 rounded-[3.5rem] p-12 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] relative overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center">
-                    <Plus size={24} />
+              <div className="absolute top-0 left-0 w-full h-2 bg-aurora-gradient opacity-50"></div>
+              
+              <div className="flex items-center justify-between mb-12">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-accent-primary/10 text-accent-primary flex items-center justify-center shadow-indigo-glow/20 border border-accent-primary/20">
+                    <Plus size={32} />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Provision Unit</h3>
+                  <h3 className="text-3xl font-black text-white tracking-tight italic">Provision <span className="text-accent-primary">Unit</span></h3>
                 </div>
-                <button onClick={() => setShowAddModal(false)} className="p-2.5 hover:bg-slate-50 rounded-full text-slate-400 transition-colors"><X /></button>
+                <button onClick={() => setShowAddModal(false)} className="p-4 bg-midnight-900 hover:bg-midnight-800 rounded-full text-midnight-400 transition-all border border-white/5 shadow-xl"><X /></button>
               </div>
               
-              <form onSubmit={handleCreateProduct} className="space-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset Designation</label>
+              <form onSubmit={handleCreateProduct} className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-midnight-500 ml-2">Product Name</label>
                   <input 
                     required autoFocus
                     value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                    placeholder="e.g. SMART INTEGRATOR V10"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-bold"
+                    placeholder="e.g. ULTRA NEXUS CORE"
+                    className="w-full bg-midnight-900 border border-white/5 rounded-2xl py-5 px-8 focus:ring-4 focus:ring-accent-primary/10 focus:bg-midnight-800 focus:border-accent-primary/30 outline-none transition-all placeholder:text-midnight-700 text-base font-bold text-white shadow-inner"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Catalog Description</label>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-midnight-500 ml-2">Short Description</label>
                   <input 
                     value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
-                    placeholder="Functionality overview"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                    placeholder="Briefly describe what this is..."
+                    className="w-full bg-midnight-900 border border-white/5 rounded-2xl py-5 px-8 focus:ring-4 focus:ring-accent-primary/10 focus:bg-midnight-800 focus:border-accent-primary/30 outline-none transition-all placeholder:text-midnight-700 text-sm font-medium text-white shadow-inner"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Intelligence Context (RAG Source)</label>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-midnight-500 ml-2">Product Manual (AI Context)</label>
                   <textarea 
                     value={formData.manual_content} onChange={e => setFormData({...formData, manual_content: e.target.value})}
-                    placeholder="Paste documentation content..."
-                    className="w-full h-40 bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all resize-none text-xs leading-relaxed font-medium text-slate-500"
+                    placeholder="Paste documentation or manual content here. This is used by the AI to answer customer questions."
+                    className="w-full h-48 bg-midnight-900 border border-white/5 rounded-[2rem] py-6 px-8 focus:ring-4 focus:ring-accent-primary/10 focus:bg-midnight-800 focus:border-accent-primary/30 outline-none transition-all resize-none text-sm leading-relaxed font-medium text-midnight-400 shadow-inner"
                   />
                 </div>
-                <div className="pt-2">
+                <div className="pt-4">
                   <button 
                     type="submit" disabled={actionLoading}
-                    className="btn-primary w-full py-5 flex items-center justify-center gap-3 tracking-widest uppercase text-[10px]"
+                    className="w-full py-6 bg-aurora-gradient rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] text-white shadow-aurora-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50"
                   >
-                    {actionLoading ? <Loader2 className="animate-spin" /> : <><Save size={18}/> Commit Asset Initialisation</>}
+                    {actionLoading ? <Loader2 className="animate-spin" /> : <><Save size={20}/> Commit Injection</>}
                   </button>
                 </div>
               </form>
@@ -309,46 +338,51 @@ const OwnerDashboard = () => {
         )}
 
         {showEditModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-4xl bg-white rounded-[3.5rem] border border-slate-200 p-12 z-10 shadow-elevated"
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-5xl bg-midnight-950 border border-white/10 rounded-[4rem] p-16 z-10 shadow-[0_0_150px_rgba(0,0,0,0.6)] relative overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
-                    <FileText size={30} />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-accent-aurora/5 rounded-full blur-[100px]"></div>
+              
+              <div className="flex items-center justify-between mb-12 relative z-10">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 rounded-[2rem] bg-midnight-900 text-accent-aurora flex items-center justify-center border border-white/5 shadow-inner">
+                    <FileText size={36} />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">Augment Intel</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Entity: <span className="text-indigo-600 font-black italic">{selectedProduct?.name}</span></p>
+                    <h3 className="text-4xl font-black text-white tracking-tighter italic">Augment <span className="text-accent-aurora">Context</span></h3>
+                    <p className="text-[12px] font-black text-midnight-500 uppercase tracking-[0.5em] mt-2">Target Unit: <span className="text-accent-aurora italic">{selectedProduct?.name}</span></p>
                   </div>
                 </div>
-                <button onClick={() => setShowEditModal(false)} className="p-3 hover:bg-slate-50 rounded-full text-slate-400 transition-colors"><X /></button>
+                <button onClick={() => setShowEditModal(false)} className="p-5 bg-midnight-900 hover:bg-midnight-800 rounded-full text-midnight-400 border border-white/5 shadow-2xl transition-all"><X /></button>
               </div>
               
-              <form onSubmit={handleUpdateManual} className="space-y-8">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">RAG Context Vector (Full Textual Documentation)</label>
+              <form onSubmit={handleUpdateManual} className="space-y-12 relative z-10">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-2">
+                    <label className="text-[12px] font-black uppercase tracking-[0.5em] text-midnight-400">Knowledge Vector Source</label>
+                    <span className="text-[10px] text-midnight-600 font-bold uppercase tracking-widest">Marked for high-priority indexing</span>
+                  </div>
                   <textarea 
                     required autoFocus
                     value={formData.manual_content} onChange={e => setFormData({...formData, manual_content: e.target.value})}
-                    placeholder="Update the intelligence vector signal..."
-                    className="w-full h-96 bg-slate-50 border border-slate-200 rounded-[2.5rem] py-8 px-10 focus:ring-4 focus:ring-indigo-50 focus:bg-white outline-none transition-all resize-none text-[13px] leading-relaxed font-medium text-slate-600 shadow-inner"
+                    placeholder="Specify the documentation text..."
+                    className="w-full h-[500px] bg-midnight-900 border border-white/5 rounded-[3rem] py-10 px-12 focus:ring-8 focus:ring-accent-aurora/5 focus:bg-midnight-800 focus:border-accent-aurora/30 outline-none transition-all resize-none text-base leading-loose font-medium text-white shadow-inner"
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-6">
                   <button 
                     type="button" onClick={() => setShowEditModal(false)}
-                    className="btn-glass flex-1 py-5 rounded-3xl"
+                    className="flex-1 py-6 bg-midnight-900 border border-white/5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] text-midnight-400 hover:text-white transition-all shadow-xl"
                   >
-                    Abort Edit
+                    Abort Update
                   </button>
                   <button 
                     type="submit" disabled={actionLoading}
-                    className="btn-primary flex-[2] py-5 flex items-center justify-center gap-3 tracking-widest uppercase text-[10px] rounded-3xl shadow-indigo-100"
+                    className="flex-[2] py-6 bg-aurora-gradient rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] text-white shadow-aurora-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50"
                   >
-                    {actionLoading ? <Loader2 className="animate-spin" /> : <><Save size={18}/> Push Vector Update</>}
+                    {actionLoading ? <Loader2 className="animate-spin" /> : <><Save size={24}/> Finalize Injection</>}
                   </button>
                 </div>
               </form>

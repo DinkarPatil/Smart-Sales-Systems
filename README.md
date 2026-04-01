@@ -1,34 +1,51 @@
-# Sales RAG Chatbot System
+# Smart Sales RAG Platform 🌌
 
-A full-stack RAG-powered sales dashboard for multi-company support, featuring role-based access control and automated query resolution.
+A premium, RAG-powered sales intelligence dashboard with role-based access control and automated customer inquiry resolution. Built with the **Midnight & Aurora** dark-mode aesthetic.
 
-## Tech Stack
-- **Backend**: FastAPI, SQLAlchemy, SQLite (aiosqlite), LlamaIndex, Groq (Llama 3), FastAPI-Mail.
-- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Lucide Icons, Recharts.
+## 🚀 Overview
+The Smart Sales RAG Platform automates the first line of customer support using advanced Retrieval-Augmented Generation (RAG). It provides a sleek, high-performance interface for Admins, Managers, Owners, and Sales Representatives to collaborate on closing deals.
 
-## Setup Instructions
+## 🛠️ Tech Stack
+- **Backend**: FastAPI, SQLAlchemy (SQLite), LlamaIndex, Groq (Llama 3), Resend API.
+- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Lucide Icons.
+- **AI/ML**: BGE embeddings (local), Llama-3 (via Groq).
+
+## 📦 Setup Instructions
 
 ### 1. Backend Setup
 1. `cd backend`
 2. Create a virtual environment: `python -m venv venv`
 3. Activate venv: `venv\Scripts\activate` (Windows)
-4. Install dependencies: `pip install -r requirements.txt`
-5. Create `.env` from `.env.example` and add your **Groq API Key** and **SMTP credentials**.
+4. Install dependencies: `pip install -r ..\requirements.txt`
+5. Create `.env` and include your **Groq API Key**, **Resend API Key**, and **Admin Secret Key**.
 6. Run the server: `uvicorn app.main:app --reload`
 
 ### 2. Frontend Setup
 1. `cd frontend`
-2. Install Node.js if not already installed.
-3. Install dependencies: `npm install`
-4. Run dev server: `npm run dev`
+2. Install dependencies: `npm install`
+3. Run dev server: `npm run dev`
 
-### 3. Usage & Admin Bootstrapping
-- **Admin Registration**: To register as an Admin, users must provide a valid `ADMIN_SECRET_KEY` during registration (found in your `.env` file). These users are automatically activated.
-- **Standard Users**: Users registering without the secret key are assigned the **Sales Representative** role and set to **Inactive**. They must be approved/assigned by an Admin to log in.
-- **Webhook**: Use the `/api/v1/webhook/google-forms` endpoint to connect your Google Forms (using Google Apps Script on the associated Sheet).
+### 3. Usage & Hierarchy
+- **Admin**: Create companies, approve new users, and manage global system settings. Use the `ADMIN_SECRET_KEY` during signup to gain instant admin status.
+- **Manager**: Oversee performance metrics, monitor resolution efficiency, and view global analytics.
+- **Owner**: Manage specific product documentation and retrieve the **Company ID** for Google Forms integration.
+- **Sales Rep**: Review and finalize AI-assisted responses for customer inquiries.
 
-## Features
-- **RDAC**: Admin, Manager, Owner, Sales Representative.
-- **RAG Resolution**: Automatic answer generation using company manuals through LlamaIndex + Groq.
-- **First-Come-First-Serve**: Sales Reps solve queries based on arrival time.
-- **SLA Handling**: Mentions 30-minute resolution time automatically.
+## 🔌 Integration
+Connect your customer inquiry source (like Google Forms) to the following endpoint:
+`POST http://localhost:8000/api/v1/webhook/google-forms`
+
+**Payload Schema:**
+```json
+{
+  "complainant_email": "customer@example.com",
+  "query_text": "How do I upgrade to the pro version?",
+  "company_id": "YOUR_COMPANY_ID_HERE"
+}
+```
+
+## ✨ Design Philosophy
+The system uses the **Midnight & Aurora** design language:
+- **Midnight**: Deep backgrounds (`#020617`) for focus and premium feel.
+- **Aurora**: Vibrant cyan (`#22d3ee`) and indigo (`#6366f1`) accents for visibility and modern tech aesthetic.
+- **Simplicity**: No technical jargon. "RAG Vectors" are simply "Product Manuals".

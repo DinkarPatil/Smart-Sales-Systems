@@ -7,20 +7,23 @@ from app.db.database import init_db, get_db
 from app.models.models import User, UserRole
 from app.core.config import settings
 
-app = FastAPI(title=settings.PROJECT_NAME)
+from contextlib import asynccontextmanager
 
-# CORS
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # In production, replace with specific frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-async def on_startup():
-    await init_db()
 
 # Routers
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
