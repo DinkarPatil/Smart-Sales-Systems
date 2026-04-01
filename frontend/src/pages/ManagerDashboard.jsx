@@ -1,144 +1,240 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, Target, PhoneIncoming } from 'lucide-react';
-
-const data = [
-  { name: 'Mon', queries: 20 },
-  { name: 'Tue', queries: 40 },
-  { name: 'Wed', queries: 35 },
-  { name: 'Thu', queries: 50 },
-  { name: 'Fri', queries: 45 },
-  { name: 'Sat', queries: 30 },
-  { name: 'Sun', queries: 25 },
-];
-
-const sentimentData = [
-  { name: 'Positive', value: 75, color: '#10b981' },
-  { name: 'Negative', value: 25, color: '#ef4444' },
-];
+import React, { useState, useEffect } from 'react';
+import { BarChart3, PieChart, Users, TrendingUp, AlertCircle, Calendar, Download, Filter, Search, ChevronRight, Activity, Loader2, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const ManagerDashboard = () => {
+  const [stats, setStats] = useState({
+    totalQueries: 482,
+    resolvedQueries: 438,
+    avgResponseTime: "1.2m",
+    conversionRate: "68%",
+    pendingQueries: 44
+  });
+  
+  const [loading, setLoading] = useState(false);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  };
+
+  const itemVariants = {
+    hidden: { y: 10, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
+      <Loader2 size={48} className="text-primary-600 animate-spin" />
+      <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Aggregating Global Analytics...</p>
+    </div>
+  );
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Sales Head Dashboard</h2>
+    <div className="space-y-10 max-w-7xl mx-auto pb-20">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-8 border-b border-slate-200">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 mb-1 flex items-center gap-3">
+             <BarChart3 className="text-primary-600" size={32} />
+             Business Intelligence Suite
+          </h2>
+          <p className="text-slate-500 text-sm font-medium">Real-time oversight of conversion metrics and machine-assisted resolution.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+             <Download size={18} /> Export Analytics
+          </button>
+          <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
+          <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 transition-all shadow-sm">
+            <Filter size={18} />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* KPI Highlight Grid */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
         {[
-          { label: 'Total Companies', value: '12', icon: TrendingUp, color: 'text-blue-400' },
-          { label: 'Total Sales', value: '$124.5k', icon: Target, color: 'text-green-400' },
-          { label: 'Sales Team', value: '45', icon: Users, color: 'text-purple-400' },
-          { label: 'Calls/SMS', value: '1,200', icon: PhoneIncoming, color: 'text-amber-400' },
+          { label: 'Total Inbound', value: stats.totalQueries, icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-50', pct: '+12%' },
+          { label: 'AI Resolution', value: stats.resolvedQueries, icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50', pct: '+8%' },
+          { label: 'Conversion', value: stats.conversionRate, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', pct: '+2%' },
+          { label: 'Pending Cycle', value: stats.pendingQueries, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', pct: '-5%' },
         ].map((stat, i) => (
-          <div key={i} className="glass p-6 rounded-2xl flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold">{stat.value}</p>
-            </div>
-            <stat.icon className={stat.color} size={28} />
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass p-6 rounded-2xl">
-          <h3 className="text-lg font-semibold mb-6">Queries Trend</h3>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
-                />
-                <Bar dataKey="queries" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="glass p-6 rounded-2xl">
-          <h3 className="text-lg font-semibold mb-6">Sentiment Analysis</h3>
-          <div className="h-64 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sentimentData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {sentimentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex justify-center gap-6 mt-4">
-            {sentimentData.map(d => (
-              <div key={d.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
-                <span className="text-sm text-slate-400">{d.name} ({d.value}%)</span>
+          <motion.div 
+            key={i}
+            variants={itemVariants}
+            className="bg-white rounded-3xl p-7 border border-slate-200 shadow-soft relative overflow-hidden group hover:border-primary-100 transition-all"
+          >
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
+                <stat.icon size={22} />
               </div>
-            ))}
+              <div className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${
+                stat.pct.startsWith('+') 
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                : 'bg-rose-50 text-rose-600 border-rose-100'
+              }`}>
+                {stat.pct}
+              </div>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 relative z-10">{stat.label}</p>
+            <p className="text-3xl font-black text-slate-900 tracking-tight relative z-10">{stat.value}</p>
+            
+            {/* Subtle background decoration */}
+            <div className="absolute top-[-1rem] right-[-1rem] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
+               <stat.icon size={80} />
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+        {/* Main Analytics Visual */}
+        <section className="xl:col-span-2 space-y-6">
+          <div className="flex items-center gap-3 px-2">
+            <Activity className="text-primary-600" size={24} />
+            <h3 className="text-xl font-black tracking-tight uppercase tracking-widest text-slate-800">Operational Flow</h3>
           </div>
-        </div>
+          
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 p-10 min-h-[420px] shadow-soft relative overflow-hidden flex flex-col justify-end group">
+            <div className="absolute top-10 left-10 flex items-center gap-3">
+               {[
+                 { label: 'Query Volume', color: 'bg-primary-600' },
+                 { label: 'AI Assistance', color: 'bg-indigo-600' },
+                 { label: 'Direct Response', color: 'bg-slate-200' }
+               ].map((dot, i) => (
+                 <div key={i} className="flex items-center gap-2">
+                   <div className={`w-2 h-2 rounded-full ${dot.color}`}></div>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dot.label}</span>
+                 </div>
+               ))}
+            </div>
+
+            <div className="flex items-end justify-between h-56 gap-4 relative z-10">
+               {[55, 35, 75, 45, 95, 65, 85, 40, 60, 50, 70, 90].map((val, i) => (
+                 <motion.div 
+                   key={i}
+                   initial={{ height: 0 }}
+                   animate={{ height: `${val}%` }}
+                   transition={{ delay: i * 0.05, duration: 1.2, ease: 'easeOut' }}
+                   className={`flex-1 rounded-t-2xl relative overflow-hidden group/bar transition-all ${
+                     i === 11 ? 'bg-primary-600 shadow-lg shadow-primary-100' : 'bg-slate-100 hover:bg-primary-100'
+                   }`}
+                 >
+                   <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/[0.03] to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity"></div>
+                 </motion.div>
+               ))}
+            </div>
+            
+            <div className="flex items-center justify-between mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400 pt-6 border-t border-slate-100">
+               <span>P-NODE 01</span>
+               <span>P-NODE 04</span>
+               <span>P-NODE 08</span>
+               <span>P-NODE 12</span>
+               <span>REALTIME SIGNAL</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Priority Segments */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 px-2">
+            <PieChart className="text-indigo-600" size={24} />
+            <h3 className="text-xl font-black tracking-tight uppercase tracking-widest text-slate-800">Domain Metrics</h3>
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-soft flex flex-col space-y-10">
+             <div className="flex justify-center p-6 relative">
+                <div className="w-56 h-56 rounded-full border-[15px] border-slate-50 border-t-primary-600 border-l-indigo-600 shadow-inner flex flex-col items-center justify-center relative">
+                   <p className="text-4xl font-black text-slate-900 tracking-tighter">88%</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Consistency</p>
+                   
+                   <div className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-soft text-primary-600">
+                      <Star size={14} />
+                   </div>
+                </div>
+             </div>
+
+             <div className="space-y-5">
+               {[
+                 { name: 'Direct Sales', val: '42%', color: 'bg-primary-600' },
+                 { name: 'Hardware Support', val: '28%', color: 'bg-indigo-600' },
+                 { name: 'General Support', val: '18%', color: 'bg-violet-600' },
+                 { name: 'Miscellaneous', val: '12%', color: 'bg-slate-200' },
+               ].map((item, i) => (
+                 <div key={i} className="group cursor-pointer">
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900 transition-colors">{item.name}</span>
+                       <span className="text-[10px] font-bold font-mono text-slate-800">{item.val}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: item.val }}
+                         transition={{ duration: 1.5, delay: i * 0.1 }}
+                         className={`h-full ${item.color} rounded-full`}
+                       />
+                    </div>
+                 </div>
+               ))}
+             </div>
+
+             <button className="w-full py-4 bg-slate-50 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 transition-all flex items-center justify-center gap-3">
+                Full Segmentation Details <ChevronRight size={14} />
+             </button>
+          </div>
+        </section>
       </div>
 
-      <div className="glass p-8 rounded-3xl">
-        <div className="flex items-center gap-3 mb-8">
-          <TrendingUp className="text-primary-400" size={24} />
-          <h3 className="text-xl font-bold">Sales Rep Performance Rankings</h3>
+      {/* Activity Monitor */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-3">
+            <Calendar className="text-emerald-600" size={24} />
+            <h3 className="text-xl font-black tracking-tight uppercase tracking-widest text-slate-800">Operational Log</h3>
+          </div>
+          <button className="text-[10px] font-black uppercase tracking-widest text-primary-600 hover:underline">Full System History</button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-y-4">
-            <thead>
-              <tr className="text-slate-500 text-sm uppercase tracking-wider">
-                <th className="px-6 pb-2">Representative</th>
-                <th className="px-6 pb-2">Total Resolved</th>
-                <th className="px-6 pb-2">Avg Speed (Mins)</th>
-                <th className="px-6 pb-2">Rating</th>
-              </tr>
-            </thead>
-            <tbody>
+
+        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-soft overflow-hidden">
+           <div className="divide-y divide-slate-100">
               {[
-                { name: 'Alex Johnson', email: 'alex@sales.com', solved: 156, speed: 12.4, rating: 4.8 },
-                { name: 'Sarah Miller', email: 'sarah@sales.com', solved: 142, speed: 15.1, rating: 4.5 },
-                { name: 'Mike Ross', email: 'mike@sales.com', solved: 98, speed: 10.2, rating: 4.2 },
-              ].map((rep, index) => (
-                <tr key={index} className="bg-white/5 hover:bg-white/10 transition-all rounded-xl">
-                  <td className="px-6 py-4 rounded-l-xl">
-                    <p className="font-semibold">{rep.name}</p>
-                    <p className="text-xs text-slate-500">{rep.email}</p>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-primary-400">{rep.solved}</td>
-                  <td className="px-6 py-4 text-slate-300">{rep.speed}m</td>
-                  <td className="px-6 py-4 rounded-r-xl">
-                    <div className="flex items-center gap-2">
-                      <span className="text-amber-400 font-bold">{rep.rating}</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <div 
-                            key={star} 
-                            className={`w-1.5 h-1.5 rounded-full ${star <= Math.floor(rep.rating) ? 'bg-amber-400' : 'bg-slate-700'}`}
-                          ></div>
-                        ))}
+                { user: 'Identity: Admin Alpha', activity: 'Validated 4 Operator Credentials', time: '12m AGO', status: 'COMPLETED' },
+                { user: 'Node: TechCorp', activity: 'Injected 2 Intelligence Vectors', time: '1h AGO', status: 'COMPLETED' },
+                { user: 'Unit: Sales Delta', activity: 'Resolved Vector Conflict ID #902', time: '2h AGO', status: 'SUCCESS' },
+                { user: 'System Core', activity: 'Temporal RAG Indexing Finalized', time: 'BOOT PHASE', status: 'SYSTEM_OK' },
+              ].map((log, i) => (
+                <div key={i} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-all group">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-primary-600 group-hover:border group-hover:border-slate-200 transition-all">
+                         <Search size={20} />
                       </div>
-                    </div>
-                  </td>
-                </tr>
+                      <div>
+                         <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{log.user}</span>
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${
+                              log.status.includes('OK') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+                            }`}>{log.status}</span>
+                         </div>
+                         <p className="font-bold text-slate-900 text-sm">{log.activity}</p>
+                      </div>
+                   </div>
+                   <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-mono font-black text-slate-300">{log.time}</span>
+                      <button className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm">
+                         <ChevronRight size={16} />
+                      </button>
+                   </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

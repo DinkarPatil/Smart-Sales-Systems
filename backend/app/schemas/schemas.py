@@ -11,7 +11,9 @@ class UserCreate(UserBase):
     password: str
     admin_secret_key: Optional[str] = None
 
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
     company_id: Optional[str] = None
@@ -51,6 +53,11 @@ class ProductBase(BaseModel):
 
 class ProductCreate(ProductBase):
     company_id: str
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    manual_content: Optional[str] = None
 
 class ProductOut(ProductBase):
     id: str
@@ -92,3 +99,13 @@ class LeadStatOut(LeadStatCreate):
     timestamp: datetime
     class Config:
         from_attributes = True
+
+class Msg(BaseModel):
+    msg: str
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str

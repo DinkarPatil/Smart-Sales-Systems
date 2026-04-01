@@ -5,6 +5,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import SalesRepDashboard from './pages/SalesRepDashboard';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import { Layout } from './components/Layout';
 
 function App() {
@@ -13,9 +15,11 @@ function App() {
   // Mock auto-login or token check could go here
   
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen">
       <Routes>
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         
         <Route element={<Layout user={user} />}>
           <Route path="/admin" element={user?.role === 'Admin' ? <AdminDashboard /> : <Navigate to="/login" />} />

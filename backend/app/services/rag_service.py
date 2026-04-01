@@ -1,34 +1,19 @@
-from llama_index.core import VectorStoreIndex, Document, Settings
-from llama_index.llms.groq import Groq
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from app.core.config import settings
-
-# Global configuration for LlamaIndex
-def setup_llama_index():
-    llm = Groq(model="llama3-70b-8192", api_key=settings.GROQ_API_KEY)
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    
-    Settings.llm = llm
-    Settings.embed_model = embed_model
-    Settings.chunk_size = 512
-
-setup_llama_index()
+# Standard RAG Service - Simple Response Mode
+# (Switched to hardcoded messages as requested)
 
 async def generate_ai_answer(query_text: str, manual_content: str) -> str:
-    if not manual_content:
-        return "Manual content not available for this company."
+    """
+    Generate a professional hardcoded response for sales inquiries.
+    Bypasses Groq/LlamaIndex for immediate, reliable template-based messaging.
+    """
     
-    document = Document(text=manual_content)
-    index = VectorStoreIndex.from_documents([document])
-    query_engine = index.as_query_engine()
-    
-    prompt = (
-        f"You are a sales support assistant. Use the following manual to answer the user's query.\n"
-        f"Manual:\n{manual_content}\n\n"
-        f"User Query: {query_text}\n\n"
-        f"Provide a polite and helpful answer. Mention that a solution will be provided within 30 minutes. "
-        f"Format the answer clearly so it can be sent via email."
+    # Returning a professional sales response template
+    return (
+        "Thank you for reaching out to our Sales Department regarding your inquiry.\n\n"
+        "We have successfully received your request: '" + (query_text[:50] + "..." if len(query_text) > 50 else query_text) + "'.\n\n"
+        "Our team is currently reviewing your message and a dedicated representative "
+        "will provide you with a detailed resolution shortly (typically within 30 minutes).\n\n"
+        "In the meantime, please feel free to browse our offerings. We appreciate your patience.\n\n"
+        "Best regards,\n"
+        "The Sales Support Team"
     )
-    
-    response = query_engine.query(prompt)
-    return str(response)

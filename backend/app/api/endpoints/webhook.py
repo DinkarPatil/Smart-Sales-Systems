@@ -5,6 +5,7 @@ from app.db.database import get_db
 from app.models.models import Company, Product, Query, QueryStatus
 from app.schemas.schemas import QueryCreate, QueryOut
 from app.services.rag_service import generate_ai_answer
+from app.services.email_service import send_response_email
 import uuid
 
 router = APIRouter()
@@ -18,12 +19,11 @@ async def google_forms_webhook(query_in: QueryCreate, db: AsyncSession = Depends
         raise HTTPException(status_code=404, detail="Company ID not recognized")
     
     # 2. Get manual content for RAG
-    # For now, we take it from the first product of the company (can be refined to specific products)
     prod_result = await db.execute(select(Product).where(Product.company_id == company.id))
     product = prod_result.scalars().first()
     manual_content = product.manual_content if product else "No manual available."
     
-    # 3. Generate AI Answer
+    # 3. Generate AI Answer (Now hardcoded in rag_service)
     ai_answer = await generate_ai_answer(query_in.query_text, manual_content)
     
     # 4. Create new Query record
@@ -41,4 +41,12 @@ async def google_forms_webhook(query_in: QueryCreate, db: AsyncSession = Depends
     db.add(new_query)
     await db.commit()
     await db.refresh(new_query)
+
+    # 5. Automatically send the response email
+    await send_response_email(
+        email_to=query_in.complainant_email,
+        subject=f"Re: Inquiry #{complaint_id} - Sales Support",
+        body=ai_answer.replace("\n", "<br>")
+    )
+
     return new_query

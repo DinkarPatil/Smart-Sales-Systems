@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, PieChart, Briefcase, MessageSquare, LogOut, Search, Bell } from 'lucide-react';
+import { Users, PieChart, Briefcase, MessageSquare, LogOut, Search, Bell, Menu, LayoutGrid } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const Layout = ({ user }) => {
@@ -8,6 +8,7 @@ export const Layout = ({ user }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
@@ -19,83 +20,102 @@ export const Layout = ({ user }) => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 glass-dark border-r border-white/5 flex flex-col z-20">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-indigo-400 bg-clip-text text-transparent">
-            SalesRAG
-          </h1>
+    <div className="flex min-h-screen bg-slate-50 text-slate-900 selection:bg-primary-100 selection:text-primary-700">
+      {/* Sidebar - Clean White Panel */}
+      <aside className="w-72 bg-white border-r border-slate-200 h-screen sticky top-0 z-20 flex flex-col shadow-sm">
+        <div className="p-8 pb-4">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-200">
+                <LayoutGrid size={24} />
+             </div>
+             <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                Sales<span className="text-primary-600 italic">RAG</span>
+             </h1>
+          </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4">
+        <nav className="flex-1 px-4 space-y-1.5 mt-10 overflow-y-auto">
+          <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Operations Center</p>
           {navItems.filter(item => item.show).map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-200 relative ${
                 location.pathname === item.path 
-                ? 'bg-primary-600/20 text-primary-400 border border-primary-500/30' 
-                : 'hover:bg-white/5 text-slate-400'
+                ? 'bg-primary-50 text-primary-700 font-bold' 
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <item.icon size={20} />
-              <span className="font-medium">{item.name} Dashboard</span>
+              {location.pathname === item.path && (
+                <motion.div 
+                  layoutId="active-pill-light"
+                  className="absolute left-[-1rem] w-1.5 h-6 bg-primary-600 rounded-r-full"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              <item.icon size={20} className={`${location.pathname === item.path ? 'text-primary-600' : 'group-hover:text-slate-700'}`} />
+              <span className="tracking-tight text-sm">{item.name} Portal</span>
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center font-bold text-lg">
+        <div className="p-6 mt-auto border-t border-slate-100">
+          <div className="flex items-center gap-3 mb-6 px-2">
+             <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-sm border border-slate-200">
                 {user?.fullName?.charAt(0) || 'U'}
-              </div>
-              <div className="overflow-hidden">
-                <p className="font-medium truncate">{user?.fullName || 'User Name'}</p>
-                <p className="text-xs text-slate-500">{user?.role || 'Role'}</p>
-              </div>
-            </div>
+             </div>
+             <div className="flex-1 overflow-hidden">
+                <p className="font-bold text-sm text-slate-900 truncate leading-none">{user?.fullName || 'Operator'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{user?.role || 'Access'}</p>
+             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all font-medium"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all font-black text-[10px] uppercase tracking-widest border border-slate-200 hover:border-red-200"
           >
-            <LogOut size={18} />
-            Logout
+            <LogOut size={16} />
+            Terminate Session
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-xl w-96">
-            <Search size={18} className="text-slate-500" />
-            <input 
-              type="text" 
-              placeholder="Search data, queries, products..." 
-              className="bg-transparent border-none outline-none w-full text-sm"
-            />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-20 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-10 border-b border-slate-200/60 shadow-sm">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-2xl w-96 group focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-100 transition-all duration-300">
+              <Search size={18} className="text-slate-400 group-focus-within:text-primary-500" />
+              <input 
+                type="text" 
+                placeholder="Secure Database Search..." 
+                className="bg-transparent border-none outline-none w-full text-sm font-medium placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="p-2 rounded-xl hover:bg-white/5 text-slate-400 relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border border-slate-950"></span>
+            <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
+            <button className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-500 transition-all relative group">
+              <Bell size={20} className="group-hover:rotate-12 transition-transform" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary-600 rounded-full border-2 border-white shadow-[0_0_8px_rgba(37,99,235,0.4)]"></span>
             </button>
+            <div className="flex items-center gap-3 bg-slate-50 py-2 px-4 rounded-xl border border-slate-200">
+               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Node: Secure</span>
+            </div>
           </div>
         </header>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="p-8"
-        >
-          <Outlet />
-        </motion.div>
-      </main>
+        <main className="flex-1 p-10 overflow-y-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Outlet />
+          </motion.div>
+        </main>
+      </div>
     </div>
   );
 };

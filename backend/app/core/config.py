@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     MAIL_FROM: str = os.getenv("MAIL_FROM", "onboarding@resend.dev")
 
+    # Frontend
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
     class Config:
         case_sensitive = True
 

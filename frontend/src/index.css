@@ -4,27 +4,72 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-50 min-h-screen font-sans;
+    @apply bg-slate-50 text-slate-800 min-h-screen font-sans antialiased selection:bg-primary-100 selection:text-primary-700 overflow-x-hidden;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(241, 245, 249, 1) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, rgba(226, 232, 240, 0.4) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, rgba(203, 213, 225, 0.2) 0, transparent 50%);
+  }
+
+  /* Custom Scrollbar for Light Mode */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
   }
 }
 
-.glass {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-slate-200/50 shadow-soft ring-1 ring-slate-900/[0.05];
+  }
+
+  /* Redefining glass-dark for light surfaces */
+  .glass-dark {
+    @apply bg-white/95 backdrop-blur-2xl border border-slate-200/80 shadow-elevated ring-1 ring-slate-900/[0.03];
+  }
+
+  .glass-card {
+    @apply bg-white rounded-3xl border border-slate-200/60 shadow-soft hover:shadow-elevated hover:bg-slate-50/50 transition-all duration-500;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg shadow-primary-200 hover:shadow-primary-300 hover:-translate-y-0.5 active:scale-95 transition-all duration-300;
+  }
+
+  .btn-glass {
+    @apply px-6 py-3 bg-white border border-slate-200/80 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-slate-900 via-slate-800 to-slate-500 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent;
+  }
 }
 
-.glass-dark {
-  @apply bg-black/30 backdrop-blur-lg border border-white/10 shadow-2xl;
-}
-
+/* Custom Animation Utilities (Lightened) */
 .animate-pulse-slow {
-  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
