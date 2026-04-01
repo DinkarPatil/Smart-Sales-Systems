@@ -14,6 +14,7 @@ const OwnerDashboard = () => {
   const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState({ name: '', description: '', manual_content: '' });
+  const [pendingFile, setPendingFile] = useState(null);
 
   const API_BASE = 'http://127.0.0.1:8000/api/v1/owner';
   const token = localStorage.getItem('token'); 
@@ -42,6 +43,7 @@ const OwnerDashboard = () => {
     e.preventDefault();
     setActionLoading(true);
     try {
+      // Stage 1: Provision Product Node
       const response = await fetch(`${API_BASE}/products`, {
         method: 'POST',
         headers: {
@@ -50,10 +52,34 @@ const OwnerDashboard = () => {
         },
         body: JSON.stringify(formData)
       });
-      if (!response.ok) throw new Error('Registration failed');
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Unit Provisioning Failed');
+      }
+      
+      const newProduct = await response.json();
+
+      // Stage 2: Intelligence Injection (If file present)
+      if (pendingFile) {
+        const uploadData = new FormData();
+        uploadData.append('file', pendingFile);
+        const uploadRes = await fetch(`${API_BASE}/products/${newProduct.id}/upload-manual`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: uploadData
+        });
+        
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json();
+          throw new Error(`Intelligence Extraction Failed: ${errData.detail || 'Unknown Signal Disruption'}`);
+        }
+      }
+
       await fetchProducts();
       setShowAddModal(false);
       setFormData({ name: '', description: '', manual_content: '' });
+      setPendingFile(null);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -101,6 +127,31 @@ const OwnerDashboard = () => {
     setSelectedProduct(product);
     setFormData({ ...formData, manual_content: product.manual_content || '' });
     setShowEditModal(true);
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedProduct) return;
+
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/products/${selectedProduct.id}/upload-manual`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: uploadData
+      });
+      if (!response.ok) throw new Error('Intelligence extraction failed');
+      const updatedProduct = await response.json();
+      setFormData({ ...formData, manual_content: updatedProduct.manual_content });
+      await fetchProducts();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const copyToClipboard = (text) => {
@@ -317,10 +368,16 @@ const OwnerDashboard = () => {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-midnight-500 ml-2">Product Manual (AI Context)</label>
+                  <div className="flex items-center justify-between px-2">
+                    <label className="text-[11px] font-black uppercase tracking-[0.4em] text-midnight-500">Product Manual (AI Context)</label>
+                    <label className="cursor-pointer px-3 py-1 bg-midnight-900 border border-white/10 rounded-lg text-accent-aurora text-[9px] font-black uppercase tracking-widest hover:border-accent-aurora transition-all">
+                       {pendingFile ? pendingFile.name : "Upload PDF/IMG"}
+                       <input type="file" className="hidden" onChange={e => setPendingFile(e.target.files[0])} accept=".pdf,.txt,.md,.png,.jpg,.jpeg" />
+                    </label>
+                  </div>
                   <textarea 
                     value={formData.manual_content} onChange={e => setFormData({...formData, manual_content: e.target.value})}
-                    placeholder="Paste documentation or manual content here. This is used by the AI to answer customer questions."
+                    placeholder="Paste documentation manually OR upload source above. This is used by the AI for resolutions."
                     className="w-full h-48 bg-midnight-900 border border-white/5 rounded-[2rem] py-6 px-8 focus:ring-4 focus:ring-accent-primary/10 focus:bg-midnight-800 focus:border-accent-primary/30 outline-none transition-all resize-none text-sm leading-relaxed font-medium text-midnight-400 shadow-inner"
                   />
                 </div>
@@ -362,12 +419,18 @@ const OwnerDashboard = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
                     <label className="text-[12px] font-black uppercase tracking-[0.5em] text-midnight-400">Knowledge Vector Source</label>
-                    <span className="text-[10px] text-midnight-600 font-bold uppercase tracking-widest">Marked for high-priority indexing</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] text-midnight-600 font-bold uppercase tracking-widest mr-2">PDF / TXT / IMG Supported</span>
+                      <label className="cursor-pointer px-4 py-2 bg-midnight-900 border border-accent-aurora/30 rounded-xl text-accent-aurora text-[10px] font-black uppercase tracking-widest hover:bg-accent-aurora hover:text-midnight-950 transition-all">
+                        {actionLoading ? <Loader2 size={14} className="animate-spin" /> : "Upload Intelligence"}
+                        <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.txt,.md,.png,.jpg,.jpeg" />
+                      </label>
+                    </div>
                   </div>
                   <textarea 
                     required autoFocus
                     value={formData.manual_content} onChange={e => setFormData({...formData, manual_content: e.target.value})}
-                    placeholder="Specify the documentation text..."
+                    placeholder="Specify the documentation text manually or upload a source file above..."
                     className="w-full h-[500px] bg-midnight-900 border border-white/5 rounded-[3rem] py-10 px-12 focus:ring-8 focus:ring-accent-aurora/5 focus:bg-midnight-800 focus:border-accent-aurora/30 outline-none transition-all resize-none text-base leading-loose font-medium text-white shadow-inner"
                   />
                 </div>

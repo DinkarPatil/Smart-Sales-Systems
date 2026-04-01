@@ -8,6 +8,9 @@ passlib[bcrypt]
 python-multipart
 llama-index
 llama-index-llms-groq
+pymupdf
+# Ollama Support
+llama-index-llms-ollama
 llama-index-embeddings-huggingface
 python-dotenv
 resend

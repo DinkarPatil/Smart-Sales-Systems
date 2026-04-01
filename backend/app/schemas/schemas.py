@@ -52,7 +52,7 @@ class ProductBase(BaseModel):
     manual_content: Optional[str] = None
 
 class ProductCreate(ProductBase):
-    company_id: str
+    company_id: Optional[str] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None

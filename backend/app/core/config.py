@@ -17,9 +17,11 @@ class Settings(BaseSettings):
     # DB
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./sales_chatbot.db")
     
-    # Groq
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     
+    # Ollama
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llava:13b")
     # Email (Resend API)
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     MAIL_FROM: str = os.getenv("MAIL_FROM", "onboarding@resend.dev")

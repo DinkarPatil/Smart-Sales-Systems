@@ -61,6 +61,26 @@ async def create_company(
     await db.refresh(new_company)
     return new_company
 
+@router.put("/companies/{company_id}", response_model=CompanyOut)
+async def update_company(
+    company_id: str,
+    company_update: CompanyCreate, # Reusing create for now but optional
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin)
+):
+    result = await db.execute(select(Company).where(Company.id == company_id))
+    company = result.scalars().first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    company.name = company_update.name
+    company.description = company_update.description
+    company.config = company_update.config
+    
+    await db.commit()
+    await db.refresh(company)
+    return company
+
 @router.get("/companies", response_model=List[CompanyOut])
 async def list_companies(
     db: AsyncSession = Depends(get_db),

@@ -1,12 +1,11 @@
 @echo off
-echo Starting Backend and Frontend...
+echo Starting Smart Sales RAG Platform (Midnight & Aurora)...
 
-:: Start Backend in a new window
-:: Points to .venv in the project root
-start "Sales RAG Backend" cmd /k "cd backend && ..\.venv\Scripts\activate && uvicorn app.main:app --reload"
+:: Start Backend - Installs new Ollama dependencies first
+start "Smart Sales RAG Backend Node" cmd /k "cd backend && ..\.venv\Scripts\activate && pip install -r ..\requirements.txt && uvicorn app.main:app --reload"
 
-:: Start Frontend in a new window
-start "Sales RAG Frontend" cmd /k "cd frontend && npm run dev"
+:: Start Frontend 
+start "Smart Sales RAG Frontend Node" cmd /k "cd frontend && npm run dev"
 
-echo Both processes are starting in separate windows.
+echo System initialization sequence complete. Nodes are starting in separate terminals.
 pause

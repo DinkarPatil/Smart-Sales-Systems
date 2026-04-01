@@ -33,6 +33,8 @@ const SalesRepDashboard = () => {
   };
 
   const handleResolve = async (queryId) => {
+    if (!window.confirm("FINAL VERIFICATION: Are you sure you want to DISPATCH this resolution to the customer's secure correspondence channel? This action cannot be reversed.")) return;
+    
     try {
       setActionLoading(true);
       const response = await fetch(`${API_BASE}/resolve-query/${queryId}`, {

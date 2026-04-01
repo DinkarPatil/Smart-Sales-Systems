@@ -7,6 +7,12 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddCompany, setShowAddCompany] = useState(false);
+  const [newCompany, setNewCompany] = useState({ name: '', description: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const [editedCompany, setEditedCompany] = useState({ name: '', description: '', config: {} });
 
   const API_BASE = 'http://127.0.0.1:8000/api/v1/admin';
   const token = localStorage.getItem('token');
@@ -57,11 +63,70 @@ const AdminDashboard = () => {
   };
 
   const handleToggleUser = (userId, currentActive) => {
-    handleUpdateUser(userId, { is_active: !currentActive });
+    const action = currentActive ? "DEACTIVATE" : "AUTHORIZE";
+    if (window.confirm(`Are you sure you want to ${action} this user's node access?`)) {
+      handleUpdateUser(userId, { is_active: !currentActive });
+    }
   };
 
   const handleRoleUpdate = (userId, newRole) => {
-    handleUpdateUser(userId, { role: newRole });
+    if (window.confirm(`CAUTION: Are you sure you want to reassign this user to the ${newRole} personnel class? This will immediately change their system clearance.`)) {
+      handleUpdateUser(userId, { role: newRole });
+    }
+  };
+
+  const handleAddCompany = async (e) => {
+    e.preventDefault();
+    if (!newCompany.name) return;
+    
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`${API_BASE}/companies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newCompany)
+      });
+      if (!response.ok) throw new Error('Failed to create company');
+      await fetchData();
+      setShowAddCompany(false);
+      setNewCompany({ name: '', description: '' });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveCompany = async () => {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`${API_BASE}/companies/${selectedCompany.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editedCompany)
+      });
+      if (!response.ok) throw new Error('Data sync failure');
+      const updatedCompany = await response.json();
+      setSelectedCompany(updatedCompany);
+      await fetchData();
+      setIsEditingCompany(false);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openCompanyDetail = (company) => {
+    setSelectedCompany(company);
+    setEditedCompany({ name: company.name, description: company.description, config: company.config || {} });
+    setIsEditingCompany(false);
   };
 
   const containerVariants = {
@@ -98,10 +163,16 @@ const AdminDashboard = () => {
           <p className="text-midnight-400 text-lg font-medium max-w-2xl">Manage users, roles, and company entities with high-level clearance.</p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="btn-secondary px-8">
+          <button 
+            onClick={() => alert("Accessing secure signal logs... (Feature coming in v2.1)")}
+            className="btn-secondary px-8"
+          >
              System Logs
           </button>
-          <button className="btn-primary px-8">
+          <button 
+            onClick={() => setShowAddCompany(true)}
+            className="btn-primary px-8"
+          >
             <Plus size={18} />
             <span>Add Company</span>
           </button>
@@ -238,7 +309,10 @@ const AdminDashboard = () => {
                       <p className="text-[10px] font-black text-midnight-500 uppercase tracking-[0.3em] mt-2">Identifier: {company.id}</p>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-midnight-900 flex items-center justify-center text-midnight-500 group-hover:bg-accent-aurora group-hover:text-midnight-950 transition-all duration-700 shadow-lg cursor-pointer">
+                  <div 
+                    onClick={() => openCompanyDetail(company)}
+                    className="w-12 h-12 rounded-full bg-midnight-900 flex items-center justify-center text-midnight-500 group-hover:bg-accent-aurora group-hover:text-midnight-950 transition-all duration-700 shadow-lg cursor-pointer"
+                  >
                     <ChevronRight size={24} />
                   </div>
                 </div>
@@ -260,6 +334,194 @@ const AdminDashboard = () => {
           </motion.div>
         </section>
       </div>
+
+      {/* Add Company Modal */}
+      {showAddCompany && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setShowAddCompany(false)}
+            className="absolute inset-0 bg-midnight-950/80 backdrop-blur-xl"
+          ></motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-lg glass-panel p-10 rounded-[3rem] relative z-[110] shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+          >
+            <h3 className="text-2xl font-black text-white tracking-tight mb-2">Initialize Company</h3>
+            <p className="text-midnight-400 text-[10px] font-bold uppercase tracking-widest mb-8">Deploy a new corporate entity to the platform</p>
+            
+            <form onSubmit={handleAddCompany} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-midnight-500 ml-1">Entity Name</label>
+                <input 
+                  type="text"
+                  required
+                  value={newCompany.name}
+                  onChange={e => setNewCompany({...newCompany, name: e.target.value})}
+                  placeholder="e.g. Acme Corporation"
+                  className="input-field"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-midnight-500 ml-1">Description</label>
+                <textarea 
+                  value={newCompany.description}
+                  onChange={e => setNewCompany({...newCompany, description: e.target.value})}
+                  placeholder="Brief overview of company operations..."
+                  className="input-field min-h-[120px] resize-none py-4"
+                />
+              </div>
+              
+              <div className="pt-6 flex gap-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddCompany(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Terminate
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary flex-1"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirm Deploy'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Company Detail Modal */}
+      {selectedCompany && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setSelectedCompany(null)}
+            className="absolute inset-0 bg-midnight-950/90 backdrop-blur-2xl"
+          ></motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-4xl glass-panel p-12 rounded-[3.5rem] relative z-[110] shadow-[0_0_150px_rgba(0,0,0,0.6)] overflow-hidden"
+          >
+            <div className="flex items-center justify-between mb-12">
+              <div className="flex items-center gap-8">
+                <div className="w-20 h-20 rounded-3xl bg-accent-primary/20 flex items-center justify-center text-accent-primary border border-accent-primary/30 shadow-inner">
+                  <Building2 size={40} />
+                </div>
+                <div>
+                  {isEditingCompany ? (
+                    <input 
+                      type="text"
+                      value={editedCompany.name}
+                      onChange={e => setEditedCompany({...editedCompany, name: e.target.value})}
+                      className="bg-midnight-900/50 border border-accent-primary/30 rounded-xl px-4 py-2 text-2xl font-black text-white w-full outline-none focus:border-accent-primary"
+                    />
+                  ) : (
+                    <h3 className="text-3xl font-black text-white tracking-tighter mb-2">{selectedCompany.name}</h3>
+                  )}
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-accent-aurora px-3 py-1 bg-accent-aurora/10 rounded-full border border-accent-aurora/20">Active Node</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-midnight-500">ID: {selectedCompany.id}</span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => {setSelectedCompany(null); setIsEditingCompany(false);}}
+                className="p-4 bg-midnight-900 border border-white/5 rounded-2xl text-midnight-500 hover:text-white transition-all shadow-lg"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <div className="bg-midnight-900/50 p-8 rounded-[2rem] border border-white/5 group hover:border-accent-aurora/30 transition-all">
+                <p className="text-[10px] font-black uppercase tracking-widest text-midnight-500 mb-4">Total Assets</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-black text-white">{selectedCompany.products || 0}</p>
+                  <p className="text-xs font-bold text-midnight-400">Products</p>
+                </div>
+              </div>
+              <div className="bg-midnight-900/50 p-8 rounded-[2rem] border border-white/5 group hover:border-accent-primary/30 transition-all">
+                <p className="text-[10px] font-black uppercase tracking-widest text-midnight-500 mb-4">Personnel Cluster</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-black text-white">{selectedCompany.salesReps || 0}</p>
+                  <p className="text-xs font-bold text-midnight-400">Sales Reps</p>
+                </div>
+              </div>
+              <div className="bg-midnight-900/50 p-8 rounded-[2rem] border border-white/5 group hover:border-amber-400/30 transition-all">
+                <p className="text-[10px] font-black uppercase tracking-widest text-midnight-500 mb-4">System Uptime</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-black text-white">99.9</p>
+                  <p className="text-xs font-bold text-midnight-400">% Stability</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+               <div className="space-y-3">
+                 <label className="text-[10px] font-black uppercase tracking-widest text-midnight-500 ml-1">Entity Intelligence Overview</label>
+                 {isEditingCompany ? (
+                   <textarea 
+                    value={editedCompany.description}
+                    onChange={e => setEditedCompany({...editedCompany, description: e.target.value})}
+                    className="w-full p-8 rounded-[2.5rem] bg-midnight-900 border border-accent-primary/30 text-white leading-relaxed font-medium min-h-[160px] outline-none"
+                   />
+                 ) : (
+                   <div className="p-8 rounded-[2.5rem] bg-midnight-900/40 border border-white/5 text-midnight-300 leading-relaxed font-medium">
+                     {selectedCompany.description || "No tactical description provides for this node. Ensure manuals are uploaded to enable RAG intelligence."}
+                   </div>
+                 )}
+               </div>
+            </div>
+            
+            <div className="mt-12 pt-10 border-t border-white/5 flex justify-end gap-5">
+              {isEditingCompany ? (
+                <>
+                  <button 
+                    onClick={() => setIsEditingCompany(false)}
+                    className="btn-secondary px-8"
+                  >
+                    Discard Changes
+                  </button>
+                  <button 
+                    onClick={handleSaveCompany}
+                    disabled={isSubmitting}
+                    className="btn-primary px-10 shadow-indigo-glow border-2 border-accent-primary/20"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Configuration'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => setIsEditingCompany(true)}
+                    className="btn-secondary px-8"
+                  >
+                    Advanced Config
+                  </button>
+                  <button 
+                    onClick={() => {setSelectedCompany(null); setIsEditingCompany(false);}}
+                    className="btn-primary px-10"
+                  >
+                    Secure Dashboard
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[30%] bg-accent-primary/5 rounded-full blur-[80px] pointer-events-none"></div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
