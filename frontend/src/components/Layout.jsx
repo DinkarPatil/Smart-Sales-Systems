@@ -6,6 +6,13 @@ import { motion } from 'framer-motion';
 export const Layout = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = React.useState(false);
+
+  const notifications = [
+    { id: 1, title: 'Security Clearance', message: 'Admin access level synchronized.', time: '2m ago', type: 'system' },
+    { id: 2, title: 'Neural Signal', message: 'AI Training node "Alpha" completed indexing.', time: '15m ago', type: 'info' },
+    { id: 3, title: 'Inquiry Assigned', message: 'New high-priority lead assigned to Sales Unit.', time: '1h ago', type: 'action' },
+  ];
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -93,6 +100,7 @@ export const Layout = ({ user }) => {
             </div>
           </div>
 
+<<<<<<< Updated upstream
           <div className="flex items-center gap-4">
             <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
             <button className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-500 transition-all relative group">
@@ -102,6 +110,58 @@ export const Layout = ({ user }) => {
             <div className="flex items-center gap-3 bg-slate-50 py-2 px-4 rounded-xl border border-slate-200">
                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Node: Secure</span>
+=======
+          <div className="flex items-center gap-6 relative">
+            <div className="h-10 w-[1px] bg-white/5 mx-2"></div>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-3 rounded-2xl hover:bg-white/5 text-midnight-400 transition-all relative group"
+            >
+              <Bell size={22} className={`${showNotifications ? 'text-accent-aurora' : ''} group-hover:rotate-12 transition-transform`} />
+              <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-accent-aurora rounded-full border-2 border-midnight-950 shadow-[0_0_10px_rgba(34,211,238,0.6)]"></span>
+            </button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-[40]" onClick={() => setShowNotifications(false)}></div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                    className="absolute top-20 right-0 w-96 bg-midnight-950 border border-white/10 rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.6)] z-[50] overflow-hidden"
+                  >
+                    <div className="p-8 border-b border-white/5 bg-midnight-900/40 flex items-center justify-between">
+                       <h3 className="text-sm font-black uppercase tracking-[0.3em] text-white">System Alerts</h3>
+                       <span className="text-[10px] font-black py-1 px-3 bg-accent-aurora/10 text-accent-aurora rounded-full border border-accent-aurora/20">3 Active</span>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                       {notifications.map(n => (
+                         <div key={n.id} className="p-8 hover:bg-white/[0.02] transition-colors border-b border-white/5 group cursor-pointer">
+                            <div className="flex items-start gap-4">
+                               <div className="w-2 h-2 rounded-full bg-accent-aurora mt-1.5 shadow-aurora-glow group-hover:scale-125 transition-transform"></div>
+                               <div className="flex-1">
+                                  <div className="flex items-center justify-between gap-4 mb-2">
+                                     <p className="text-[11px] font-black text-white uppercase tracking-widest">{n.title}</p>
+                                     <span className="text-[9px] font-bold text-midnight-600 whitespace-nowrap italic">{n.time}</span>
+                                  </div>
+                                  <p className="text-xs text-midnight-400 font-medium leading-relaxed">{n.message}</p>
+                               </div>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="p-6 bg-midnight-900/60 text-center">
+                       <button className="text-[10px] font-black uppercase tracking-[0.4em] text-midnight-500 hover:text-white transition-colors">Clear Signal History</button>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+            <div className="flex items-center gap-4 bg-midnight-900/80 py-2.5 px-6 rounded-2xl border border-white/5 shadow-inner">
+               <div className="w-2.5 h-2.5 bg-accent-aurora rounded-full animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.4)]"></div>
+               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-aurora/80">System Online</span>
+>>>>>>> Stashed changes
             </div>
           </div>
         </header>

@@ -41,10 +41,58 @@ class CompanyBase(BaseModel):
 class CompanyCreate(CompanyBase):
     pass
 
+class CompanyUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    config: Optional[dict] = None
+
 class CompanyOut(CompanyBase):
     id: str
+    product_count: Optional[int] = 0
+    user_count: Optional[int] = 0
     class Config:
         from_attributes = True
+
+class AdminStats(BaseModel):
+    total_users: int
+    total_companies: int
+    total_products: int
+    total_queries: int
+    pending_queries: int
+    resolved_queries: int
+
+class OwnerStats(BaseModel):
+    company_name: str
+    total_products: int
+    total_queries: int
+    pending_queries: int
+    resolved_queries: int
+    total_personnel: int
+
+class SalesRepStats(BaseModel):
+    resolved_count: int
+    pending_count: int
+    assigned_count: int
+    avg_resolution_time: Optional[float] = 0.0
+
+class QueryBulkAssign(BaseModel):
+    query_ids: List[str]
+
+class TeamMemberOut(BaseModel):
+    id: str
+    full_name: Optional[str]
+    email: str
+    role: str
+    active_queries: int
+    resolved_queries: int
+
+class ManagerStats(BaseModel):
+    company_name: str
+    total_queries: int
+    pending_queries: int
+    resolved_queries: int
+    positive_sentiment_pct: float
+    team_count: int
 
 class ProductBase(BaseModel):
     name: str
