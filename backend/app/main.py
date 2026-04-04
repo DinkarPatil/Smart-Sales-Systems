@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import traceback
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.api.endpoints import auth, admin, manager, owner, sales_rep, webhook
@@ -12,6 +14,12 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    with open("error.txt", "w") as f:
+        f.write(traceback.format_exc())
+    return JSONResponse(status_code=500, content={"message": str(exc)})
 
 # CORS
 app.add_middleware(
@@ -40,3 +48,11 @@ app.include_router(webhook.router, prefix=f"{settings.API_V1_STR}/webhook", tags
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Sales RAG Chatbot API"}
+
+@app.get("/debug")
+def debug_sql():
+    import sqlite3
+    conn = sqlite3.connect('sales_chatbot.db')
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(activity_logs)")
+    return {"cols": [c[1] for c in cursor.fetchall()]}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Users, PieChart, Briefcase, MessageSquare, LogOut, Search, Bell, Menu, LayoutGrid, Terminal, Building2, Activity, Globe, Home, Settings, Monitor, Moon, Sun, Loader2, X } from 'lucide-react';
+import { Users, PieChart, Briefcase, MessageSquare, LogOut, Search, Bell, Menu, LayoutGrid, Terminal, Building2, Activity, Globe, Home, Settings, Monitor, Moon, Sun, Loader2, X, Database, Sparkles, AlertTriangle, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Layout = ({ user, setUser }) => {
@@ -10,6 +10,18 @@ export const Layout = ({ user, setUser }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
   const [isUpdatingTheme, setIsUpdatingTheme] = React.useState(false);
+  const [ownerStats, setOwnerStats] = React.useState(null);
+
+  React.useEffect(() => {
+    if (user?.role === 'Owner') {
+      fetch('http://127.0.0.1:8000/api/v1/owner/stats', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      .then(res => res.json())
+      .then(data => setOwnerStats(data))
+      .catch(console.error);
+    }
+  }, [user, location.pathname, location.search]); // Re-fetch on navigation
 
   const handleThemeChange = async (newTheme) => {
     setIsUpdatingTheme(true);
@@ -61,9 +73,14 @@ export const Layout = ({ user, setUser }) => {
     { name: 'Home', path: '/admin', icon: Home, show: true },
     { name: 'Users', path: '/admin?view=personnel', icon: Users, show: true },
     { name: 'Companies', path: '/admin?view=entities', icon: Building2, show: true },
+  ] : user?.role === 'Owner' ? [
+    { name: 'Home', path: '/owner', icon: Home, show: true },
+    { name: 'Assets', path: '/owner?view=assets', icon: Database, show: true },
+    { name: 'Negotiations', path: '/owner?view=negotiations', icon: Sparkles, show: true },
+    { name: 'Critical Signals', path: '/owner?view=critical', icon: AlertTriangle, show: ownerStats?.high_priority_pending > 0, alert: true, count: ownerStats?.high_priority_pending },
+    { name: 'History', path: '/owner?view=history', icon: History, show: true },
   ] : [
     { name: 'Manager', path: '/manager', icon: PieChart, show: user?.role === 'Manager' },
-    { name: 'Owner', path: '/owner', icon: Briefcase, show: user?.role === 'Owner' },
     { name: 'Sales Rep', path: '/sales', icon: MessageSquare, show: user?.role === 'SalesRep' },
   ];
 
@@ -73,6 +90,9 @@ export const Layout = ({ user, setUser }) => {
     }
     // Default to Home if it's strictly /admin and no search params
     if (path === '/admin' && location.pathname === '/admin' && location.search === '') {
+      return true;
+    }
+    if (path === '/owner' && location.pathname === '/owner' && location.search === '') {
       return true;
     }
     return location.pathname === path;
@@ -124,12 +144,17 @@ export const Layout = ({ user, setUser }) => {
               {isActive(item.path) && (
                 <motion.div 
                    layoutId="active-pill-amethyst"
-                   className="absolute left-0 w-1.5 h-6 bg-accent-secondary rounded-r-full shadow-fuchsia-glow"
+                   className={`absolute left-0 w-1.5 h-6 rounded-r-full shadow-fuchsia-glow ${item.alert ? 'bg-red-500' : 'bg-accent-secondary'}`}
                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
-              <item.icon size={22} className={`${isActive(item.path) ? 'text-accent-secondary' : 'group-hover:text-accent-primary'} transition-colors duration-500`} />
-              <span className="tracking-wide text-sm font-semibold">{item.name}</span>
+              <item.icon size={22} className={`${isActive(item.path) ? (item.alert ? 'text-red-500' : 'text-accent-secondary') : 'group-hover:text-accent-primary'} ${item.alert && !isActive(item.path) ? 'text-red-500/80 animate-pulse' : ''} transition-colors duration-500`} />
+              <div className="flex items-center justify-between flex-1">
+                 <span className={`tracking-wide text-sm font-semibold ${item.alert && !isActive(item.path) ? 'text-red-500/80' : ''}`}>{item.name}</span>
+                 {item.alert && (
+                   <span className="w-5 h-5 bg-red-500/20 text-red-500 rounded-lg flex items-center justify-center text-[9px] font-black">{item.count}</span>
+                 )}
+              </div>
             </Link>
           ))}
         </nav>

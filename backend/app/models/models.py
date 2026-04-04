@@ -107,3 +107,13 @@ class LeadStat(Base):
     type = Column(String) # "Call" or "SMS"
     sentiment = Column(String) # "+ve" or "-ve"
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    action = Column(String, nullable=False) # e.g. "PRODUCT_CREATED", "DOC_UPLOADED"
+    entity_name = Column(String, nullable=False) # Name of the product or doc
+    details = Column(Text, nullable=True) # Extra info like old_price -> new_price
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

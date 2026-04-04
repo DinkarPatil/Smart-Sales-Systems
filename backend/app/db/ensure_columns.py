@@ -44,6 +44,18 @@ def ensure_company_columns():
     add_column_safely("users", "is_active", "BOOLEAN") # Ensuring visibility for Admin activation
     add_column_safely("users", "role", "String") # Ensuring role structure
     add_column_safely("users", "theme", "VARCHAR") # Feature: Dynamic User Themes
+    
+    # Synchronize Queries Unit (CRITICAL FOR OWNER DASHBOARD SLA)
+    add_column_safely("queries", "is_escalated", "BOOLEAN")
+    add_column_safely("queries", "escalated_at", "DATETIME")
+    add_column_safely("queries", "deadline_at", "DATETIME")
+    add_column_safely("queries", "priority", "String")
+    add_column_safely("queries", "tokens", "Integer")
+    
+    # Synchronize Products Unit
+    add_column_safely("products", "base_price", "Integer")
+    add_column_safely("products", "max_discount_pct", "Integer")
+    add_column_safely("products", "manual_content", "TEXT")
             
     # Create user_companies association table
     cursor.execute("""
@@ -66,6 +78,18 @@ def ensure_company_columns():
     
     if existing_assignments:
         print(f"Migrated {len(existing_assignments)} company assignments to the new association table.")
+        
+    # FORCE SYNC: Ensure dinkar10012@gmail.com has a company_id!
+    cursor.execute("SELECT id FROM companies LIMIT 1")
+    first_company = cursor.fetchone()
+    if not first_company:
+        import uuid
+        new_comp_id = str(uuid.uuid4())
+        cursor.execute("INSERT INTO companies (id, name, description) VALUES (?, ?, ?)", (new_comp_id, "Neural Nexus Auto-Generated", "System created company"))
+        first_company = (new_comp_id,)
+    
+    # Apply to user
+    cursor.execute("UPDATE users SET company_id = ? WHERE email = 'dinkar10012@gmail.com' AND (company_id IS NULL OR company_id = '')", (first_company[0],))
             
     conn.commit()
     conn.close()

@@ -84,6 +84,9 @@ class OwnerStats(BaseModel):
     pending_queries: int
     resolved_queries: int
     total_team_members: int
+    escalated_queries: int = 0
+    products_missing_docs: int = 0
+    high_priority_pending: int = 0
 
 class SalesRepStats(BaseModel):
     resolved_count: int
@@ -199,3 +202,12 @@ class PasswordResetRequest(BaseModel):
 class PasswordReset(BaseModel):
     token: str
     new_password: str
+
+class ActivityLogOut(BaseModel):
+    id: str
+    action: str
+    entity_name: str
+    details: Optional[str] = None
+    created_at: datetime
+    class Config:
+        from_attributes = True

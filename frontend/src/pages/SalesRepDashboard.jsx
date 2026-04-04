@@ -12,10 +12,10 @@ const SalesRepDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedQuery, setSelectedQuery] = useState(null);
-  const [resolutionText, setResolutionText] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [discountPct, setDiscountPct] = useState(0);
 
   const API_BASE = 'http://127.0.0.1:8000/api/v1/sales';
   const token = localStorage.getItem('token');
@@ -29,18 +29,21 @@ const SalesRepDashboard = () => {
       setLoading(true);
       const [queriesRes, statsRes] = await Promise.all([
         fetch(`${API_BASE}/queries`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE}/stats`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${API_BASE}/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE}/products`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
-      if (!queriesRes.ok || !statsRes.ok) throw new Error('Operative data link failed');
+      if (!queriesRes.ok || !statsRes.ok || !productsRes.ok) throw new Error('Operative data link failed');
 
-      const [queriesData, statsData] = await Promise.all([
+      const [queriesData, statsData, productsData] = await Promise.all([
         queriesRes.json(),
-        statsRes.json()
+        statsRes.json(),
+        productsRes.json()
       ]);
 
       setQueries(queriesData);
       setStats(statsData);
+      setProducts(productsData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,29 +51,48 @@ const SalesRepDashboard = () => {
     }
   };
 
-  const handleResolve = async (queryId) => {
-    if (!resolutionText.trim()) return;
-    if (!window.confirm("FINAL DISPATCH: Respond to customer?")) return;
-    
+  const handleEscalate = async (queryId, priority = 'normal') => {
     try {
       setActionLoading(true);
-      const response = await fetch(`${API_BASE}/queries/${queryId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          status: 'Resolved',
-          resolution: resolutionText 
-        })
+      const response = await fetch(`${API_BASE}/queries/${queryId}/escalate?priority=${priority}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (!response.ok) throw new Error('Resolution signal lost');
-      
+      if (!response.ok) throw new Error('Escalation signal failed');
+      alert(`SUCCESS: Signal escalated to Owner with ${priority.toUpperCase()} priority.`);
       await fetchData();
       setSelectedQuery(null);
-      setResolutionText('');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApplyDiscount = async (queryId) => {
+    if (!selectedProductId) return alert("Select a product node first");
+    try {
+      setActionLoading(true);
+      const response = await fetch(`${API_BASE}/queries/${queryId}/apply-discount`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+          product_id: selectedProductId,
+          discount_pct: parseInt(discountPct)
+        })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Discount application failed');
+      }
+      await fetchData();
+      setSelectedQuery(null);
+      setDiscountPct(0);
+      setSelectedProductId('');
+      alert("SUCCESS: Discount applied and price adjusted per corporate policy.");
     } catch (err) {
       alert(err.message);
     } finally {
@@ -228,38 +250,61 @@ const SalesRepDashboard = () => {
                     </button>
                  </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                     <div className="p-8 bg-amethyst-900/40 border border-white/5 rounded-[2.5rem] shadow-inner">
-                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Customer Intelligence</p>
-                       <div className="space-y-4">
-                          {[
-                            { label: 'Identifier', val: selectedQuery.customer_metadata?.full_name || 'N/A' },
-                            { label: 'Origin', val: selectedQuery.customer_metadata?.company || 'External Entity' },
-                            { label: 'Channel', val: 'SMS Gateway Sync' },
-                          ].map((data, i) => (
-                            <div key={i} className="flex justify-between border-b border-white/5 pb-2">
-                               <span className="text-[10px] font-bold text-slate-600">{data.label}</span>
-                               <span className="text-[11px] font-black text-white italic">{data.val}</span>
-                            </div>
-                          ))}
+                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Price Negotiation Suite</p>
+                       <div className="space-y-6">
+                          <div className="space-y-2">
+                             <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Product Node</label>
+                             <select 
+                               value={selectedProductId}
+                               onChange={(e) => setSelectedProductId(e.target.value)}
+                               className="w-full bg-amethyst-950 border border-white/5 rounded-xl p-3 text-[10px] font-bold text-white outline-none focus:ring-2 focus:ring-accent-secondary/40"
+                             >
+                                <option value="">Select Asset...</option>
+                                {products.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price})</option>)}
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <div className="flex justify-between items-center px-1">
+                                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Requested Discount (%)</label>
+                                <span className="text-[10px] font-black text-accent-secondary">{discountPct}%</span>
+                             </div>
+                             <input 
+                               type="range" min="0" max="50" step="1"
+                               value={discountPct}
+                               onChange={(e) => setDiscountPct(e.target.value)}
+                               className="w-full h-1 bg-amethyst-950 rounded-lg appearance-none cursor-pointer accent-accent-secondary"
+                             />
+                          </div>
+                          <button 
+                            onClick={() => handleApplyDiscount(selectedQuery.id)}
+                            disabled={actionLoading || !selectedProductId}
+                            className="w-full py-3 bg-accent-secondary/10 border border-accent-secondary/20 rounded-xl text-accent-secondary font-black text-[9px] uppercase tracking-widest hover:bg-accent-secondary hover:text-white transition-all disabled:opacity-30"
+                          >
+                             Apply Auto-Discount
+                          </button>
                        </div>
                     </div>
-                    <div className="p-8 bg-amethyst-900/40 border border-white/5 rounded-[2.5rem] shadow-inner">
-                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Temporal Sync</p>
-                       <div className="space-y-4">
-                          <div className="flex items-center gap-4 p-4 bg-amethyst-950 rounded-2xl border border-white/5">
-                             <Clock className="text-rose-400" size={18} />
-                             <div>
-                                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Entry Timestamp</p>
-                                <p className="text-xs font-bold text-white">{new Date(selectedQuery.created_at).toLocaleString()}</p>
-                             </div>
-                          </div>
-                          <div className="flex items-center gap-4 p-4 bg-amethyst-950 rounded-2xl border border-white/5">
-                             <Clock className="text-emerald-400" size={18} />
-                             <div>
-                                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Response SLA Status</p>
-                                <p className="text-xs font-black text-emerald-400 uppercase tracking-widest">OPTIMAL</p>
-                             </div>
+                    <div className="p-8 bg-amethyst-900/40 border border-white/5 rounded-[2.5rem] shadow-inner flex flex-col">
+                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Executive Escalation</p>
+                       <div className="flex-grow flex flex-col justify-center gap-4">
+                          <p className="text-[10px] text-slate-400 italic mb-2 text-center">Flag this signal for technical or executive adjudication from the Owner.</p>
+                          <div className="grid grid-cols-2 gap-4">
+                             <button 
+                               onClick={() => handleEscalate(selectedQuery.id, 'normal')}
+                               disabled={actionLoading}
+                               className="py-4 bg-white/5 border border-white/10 rounded-2xl text-slate-400 font-black text-[9px] uppercase tracking-widest hover:bg-accent-primary/20 hover:text-white hover:border-accent-primary/40 transition-all"
+                             >
+                                Normal Escalation
+                             </button>
+                             <button 
+                               onClick={() => handleEscalate(selectedQuery.id, 'high')}
+                               disabled={actionLoading}
+                               className="py-4 bg-white/5 border border-white/10 rounded-2xl text-red-500/50 font-black text-[9px] uppercase tracking-widest hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40 transition-all shadow-xl"
+                             >
+                                High Priority (12h)
+                             </button>
                           </div>
                        </div>
                     </div>

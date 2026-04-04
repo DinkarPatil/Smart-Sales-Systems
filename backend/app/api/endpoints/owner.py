@@ -5,8 +5,8 @@ from typing import List, Optional
 import uuid
 import os
 from app.db.database import get_db
-from app.models.models import User, Company, Product, Query, QueryStatus, ProductDocument
-from app.schemas.schemas import ProductOut, QueryOut, ProductCreate, ProductUpdate, CompanyCreate, CompanyOut, OwnerStats, CompanyUpdate, UserOut, NegotiationAction
+from app.models.models import User, Company, Product, Query, QueryStatus, ProductDocument, ActivityLog
+from app.schemas.schemas import ProductOut, QueryOut, ProductCreate, ProductUpdate, CompanyCreate, CompanyOut, OwnerStats, CompanyUpdate, UserOut, NegotiationAction, ActivityLogOut
 from app.api.deps import get_current_active_owner
 from app.services.email_service import send_response_email
 from datetime import datetime, timedelta
@@ -21,53 +21,71 @@ async def get_owner_stats(
     if not current_owner.company_id:
         raise HTTPException(status_code=400, detail="Owner is not associated with any company")
     
-    # Company Name
-    company_result = await db.execute(select(Company).where(Company.id == current_owner.company_id))
-    company = company_result.scalars().first()
-    
-    # 1. Product Count
-    p_stmt = select(func.count(Product.id)).where(Product.company_id == current_owner.company_id)
-    product_count = (await db.execute(p_stmt)).scalar() or 0
-    
-    # Products with docs
-    p_docs_stmt = select(func.count(Product.id)).where(
-        Product.company_id == current_owner.company_id,
-        Product.manual_content != None,
-        Product.manual_content != ""
-    )
-    products_with_docs = (await db.execute(p_docs_stmt)).scalar() or 0
-    
-    # 2. Team Count
-    u_stmt = select(func.count(User.id)).where(User.company_id == current_owner.company_id)
-    team_count = (await db.execute(u_stmt)).scalar() or 0
-    
-    # 3. Query resolution metrics
-    total_q_stmt = select(func.count(Query.id)).where(Query.company_id == current_owner.company_id)
-    total_q = (await db.execute(total_q_stmt)).scalar() or 0
-    
-    resolved_q_stmt = select(func.count(Query.id)).where(
-        Query.company_id == current_owner.company_id,
-        Query.status == QueryStatus.RESOLVED
-    )
-    resolved_q = (await db.execute(resolved_q_stmt)).scalar() or 0
-    
-    # Escalated queries
-    esc_q_stmt = select(func.count(Query.id)).where(
-        Query.company_id == current_owner.company_id,
-        Query.is_escalated == True,
-        Query.status == QueryStatus.PENDING
-    )
-    escalated_q = (await db.execute(esc_q_stmt)).scalar() or 0
+    try:
+        # Company Name
+        company_result = await db.execute(select(Company).where(Company.id == current_owner.company_id))
+        company = company_result.scalars().first()
+        
+        # 1. Product Count
+        p_stmt = select(func.count(Product.id)).where(Product.company_id == current_owner.company_id)
+        product_count = (await db.execute(p_stmt)).scalar() or 0
+        
+        # Products with docs
+        p_docs_stmt = select(func.count(Product.id)).where(
+            Product.company_id == current_owner.company_id,
+            Product.manual_content != None,
+            Product.manual_content != ""
+        )
+        products_with_docs = (await db.execute(p_docs_stmt)).scalar() or 0
+        
+        # 2. Team Count
+        u_stmt = select(func.count(User.id)).where(User.company_id == current_owner.company_id)
+        team_count = (await db.execute(u_stmt)).scalar() or 0
+        
+        # 3. Query resolution metrics
+        total_q_stmt = select(func.count(Query.id)).where(Query.company_id == current_owner.company_id)
+        total_q = (await db.execute(total_q_stmt)).scalar() or 0
+        
+        resolved_q_stmt = select(func.count(Query.id)).where(
+            Query.company_id == current_owner.company_id,
+            Query.status == QueryStatus.RESOLVED
+        )
+        resolved_q = (await db.execute(resolved_q_stmt)).scalar() or 0
+        
+        # Escalated queries
+        esc_q_stmt = select(func.count(Query.id)).where(
+            Query.company_id == current_owner.company_id,
+            Query.is_escalated == True,
+            Query.status == QueryStatus.PENDING
+        )
+        escalated_q = (await db.execute(esc_q_stmt)).scalar() or 0
 
-    return OwnerStats(
-        company_name=company.name if company else "N/A",
-        total_products=product_count,
-        total_team_members=team_count,
-        pending_queries=total_q - resolved_q,
-        resolved_queries=resolved_q,
-        escalated_queries=escalated_q,
-        products_missing_docs=product_count - products_with_docs
-    )
+        # High priority or breached SLA
+        from sqlalchemy import or_
+        high_prio_stmt = select(func.count(Query.id)).where(
+            Query.company_id == current_owner.company_id,
+            Query.is_escalated == True,
+            Query.status == QueryStatus.PENDING,
+            or_(Query.priority == "high", Query.deadline_at < func.now())
+        )
+        high_prio_q = (await db.execute(high_prio_stmt)).scalar() or 0
+
+        return OwnerStats(
+            company_name=company.name if company else "N/A",
+            total_products=product_count,
+            total_team_members=team_count,
+            pending_queries=total_q - resolved_q,
+            resolved_queries=resolved_q,
+            escalated_queries=escalated_q,
+            products_missing_docs=product_count - products_with_docs,
+            high_priority_pending=high_prio_q
+        )
+    except Exception as e:
+        import traceback
+        with open("error.txt", "w") as f:
+            f.write(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/company", response_model=CompanyOut)
 async def get_owner_company(
@@ -128,6 +146,16 @@ async def create_owner_product(
         company_id=current_owner.company_id
     )
     db.add(new_product)
+    
+    # Audit Logging
+    log = ActivityLog(
+        company_id=current_owner.company_id,
+        action="PRODUCT_PROVISIONED",
+        entity_name=new_product.name,
+        details=f"Base price: {new_product.base_price}, Max discount: {new_product.max_discount_pct}%"
+    )
+    db.add(log)
+    
     await db.commit()
     await db.refresh(new_product)
     return new_product
@@ -147,6 +175,15 @@ async def update_owner_product(
     for key, value in product_update.dict(exclude_unset=True).items():
         setattr(product, key, value)
         
+    # Audit Logging
+    log = ActivityLog(
+        company_id=current_owner.company_id,
+        action="PRODUCT_MODIFIED",
+        entity_name=product.name,
+        details="Updated metadata parameters"
+    )
+    db.add(log)
+        
     await db.commit()
     await db.refresh(product)
     return product
@@ -161,6 +198,14 @@ async def delete_owner_product(
     product = (await db.execute(stmt)).scalars().first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    # Audit Logging
+    log = ActivityLog(
+        company_id=current_owner.company_id,
+        action="PRODUCT_NEUTRALIZED",
+        entity_name=product.name,
+        details="Asset node destroyed"
+    )
+    db.add(log)
     
     await db.delete(product)
     await db.commit()
@@ -180,6 +225,18 @@ async def list_owner_queries(
     current_owner: User = Depends(get_current_active_owner)
 ):
     result = await db.execute(select(Query).where(Query.company_id == current_owner.company_id))
+    return result.scalars().all()
+
+@router.get("/history", response_model=List[ActivityLogOut])
+async def list_owner_history(
+    db: AsyncSession = Depends(get_db),
+    current_owner: User = Depends(get_current_active_owner)
+):
+    result = await db.execute(
+        select(ActivityLog)
+        .where(ActivityLog.company_id == current_owner.company_id)
+        .order_by(ActivityLog.created_at.desc())
+    )
     return result.scalars().all()
 
 import httpx
@@ -272,6 +329,15 @@ async def upload_product_manual(
         all_docs = res.scalars().all()
         product.manual_content = "\n\n".join([d.content for d in all_docs])
         
+        # Audit Logging
+        log = ActivityLog(
+            company_id=current_owner.company_id,
+            action="KNOWLEDGE_INDEXED",
+            entity_name=product.name,
+            details=f"Attached node: {file.filename}"
+        )
+        db.add(log)
+        
         await db.commit()
         return {"status": "success", "message": f"Document indexed and added to {product.name} repository"}
 
@@ -299,6 +365,15 @@ async def delete_product_document(
     res = await db.execute(select(ProductDocument).where(ProductDocument.product_id == product.id))
     all_docs = res.scalars().all()
     product.manual_content = "\n\n".join([d.content for d in all_docs])
+    
+    # Audit Logging
+    log = ActivityLog(
+        company_id=current_owner.company_id,
+        action="KNOWLEDGE_REMOVED",
+        entity_name=product.name,
+        details=f"Detached node: {doc.filename}"
+    )
+    db.add(log)
     
     await db.commit()
     return {"status": "success"}
