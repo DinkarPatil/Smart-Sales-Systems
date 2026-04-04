@@ -6,8 +6,12 @@ from app.api.endpoints import auth, admin, manager, owner, sales_rep, webhook
 from app.db.database import init_db, get_db
 from app.models.models import User, UserRole
 from app.core.config import settings
+from app.db.ensure_columns import ensure_company_columns
 
-app = FastAPI(title=settings.PROJECT_NAME)
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+)
 
 # CORS
 app.add_middleware(
@@ -19,7 +23,10 @@ app.add_middleware(
 )
 
 @app.on_event("startup")
-async def on_startup():
+async def startup_event():
+    # Ensure database columns are up-to-date
+    ensure_company_columns()
+    # Initialize DB (create tables if none exist)
     await init_db()
 
 # Routers

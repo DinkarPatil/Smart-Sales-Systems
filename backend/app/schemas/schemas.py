@@ -10,6 +10,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     admin_secret_key: Optional[str] = None
+    role: Optional[UserRole] = None
+    company_id: Optional[str] = None
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -17,12 +19,18 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
     company_id: Optional[str] = None
+    company_ids: Optional[List[str]] = None # For multi-assignment
+    theme: Optional[str] = None
 
 class UserOut(UserBase):
     id: str
-    role: UserRole
+    role: str
     is_active: bool
     company_id: Optional[str] = None
+    company_name: Optional[str] = None
+    assigned_companies: Optional[List[dict]] = [] # List of {id, name}
+    theme: Optional[str] = "system"
+    created_at: Optional[datetime] = None
     class Config:
         from_attributes = True
 
@@ -50,6 +58,15 @@ class CompanyOut(CompanyBase):
     id: str
     product_count: Optional[int] = 0
     user_count: Optional[int] = 0
+    sales_rep_count: Optional[int] = 0
+    manager_name: Optional[str] = None
+    is_active: bool = True
+    admin_suspended: bool = False
+    manager_suspended: bool = False
+    created_at: Optional[datetime] = None
+    total_tokens: Optional[int] = 0
+    weekly_tokens: Optional[int] = 0
+    monthly_tokens: Optional[int] = 0
     class Config:
         from_attributes = True
 
@@ -64,10 +81,9 @@ class AdminStats(BaseModel):
 class OwnerStats(BaseModel):
     company_name: str
     total_products: int
-    total_queries: int
     pending_queries: int
     resolved_queries: int
-    total_personnel: int
+    total_team_members: int
 
 class SalesRepStats(BaseModel):
     resolved_count: int
@@ -97,19 +113,35 @@ class ManagerStats(BaseModel):
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
+    price: Optional[str] = None
+    base_price: Optional[int] = 0
+    max_discount_pct: Optional[int] = 0
     manual_content: Optional[str] = None
 
+class ProductDocumentOut(BaseModel):
+    id: str
+    filename: str
+    content: Optional[str] = None
+    file_type: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
 class ProductCreate(ProductBase):
-    company_id: str
+    company_id: Optional[str] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    price: Optional[str] = None
+    base_price: Optional[int] = None
+    max_discount_pct: Optional[int] = None
     manual_content: Optional[str] = None
 
 class ProductOut(ProductBase):
     id: str
     company_id: str
+    documents: List[ProductDocumentOut] = []
     class Config:
         from_attributes = True
 
@@ -134,8 +166,18 @@ class QueryOut(QueryBase):
     final_answer: Optional[str] = None
     status: QueryStatus
     created_at: datetime
+    is_escalated: bool = False
+    escalated_at: Optional[datetime] = None
+    deadline_at: Optional[datetime] = None
+    priority: str = "normal"
+    tokens: int = 0
     class Config:
         from_attributes = True
+
+class NegotiationAction(BaseModel):
+    final_answer: str
+    final_price: Optional[str] = None
+    status: QueryStatus = QueryStatus.RESOLVED
 
 class LeadStatCreate(BaseModel):
     company_id: str

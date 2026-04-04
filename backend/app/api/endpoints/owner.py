@@ -1,22 +1,18 @@
-<<<<<<< Updated upstream
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, delete
-=======
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy import select, delete, func, update
->>>>>>> Stashed changes
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
 import uuid
+import os
 from app.db.database import get_db
-from app.models.models import User, Company, Product, Query, QueryStatus
-from app.schemas.schemas import ProductOut, QueryOut, ProductCreate, ProductUpdate, CompanyCreate, CompanyOut, OwnerStats, CompanyUpdate, UserOut
+from app.models.models import User, Company, Product, Query, QueryStatus, ProductDocument
+from app.schemas.schemas import ProductOut, QueryOut, ProductCreate, ProductUpdate, CompanyCreate, CompanyOut, OwnerStats, CompanyUpdate, UserOut, NegotiationAction
 from app.api.deps import get_current_active_owner
+from app.services.email_service import send_response_email
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
-<<<<<<< Updated upstream
-=======
 @router.get("/stats", response_model=OwnerStats)
 async def get_owner_stats(
     db: AsyncSession = Depends(get_db),
@@ -29,273 +25,333 @@ async def get_owner_stats(
     company_result = await db.execute(select(Company).where(Company.id == current_owner.company_id))
     company = company_result.scalars().first()
     
-    # Total Products
-    p_result = await db.execute(select(func.count(Product.id)).where(Product.company_id == current_owner.company_id))
-    total_products = p_result.scalar_one()
+    # 1. Product Count
+    p_stmt = select(func.count(Product.id)).where(Product.company_id == current_owner.company_id)
+    product_count = (await db.execute(p_stmt)).scalar() or 0
+    
+    # Products with docs
+    p_docs_stmt = select(func.count(Product.id)).where(
+        Product.company_id == current_owner.company_id,
+        Product.manual_content != None,
+        Product.manual_content != ""
+    )
+    products_with_docs = (await db.execute(p_docs_stmt)).scalar() or 0
+    
+    # 2. Team Count
+    u_stmt = select(func.count(User.id)).where(User.company_id == current_owner.company_id)
+    team_count = (await db.execute(u_stmt)).scalar() or 0
+    
+    # 3. Query resolution metrics
+    total_q_stmt = select(func.count(Query.id)).where(Query.company_id == current_owner.company_id)
+    total_q = (await db.execute(total_q_stmt)).scalar() or 0
+    
+    resolved_q_stmt = select(func.count(Query.id)).where(
+        Query.company_id == current_owner.company_id,
+        Query.status == QueryStatus.RESOLVED
+    )
+    resolved_q = (await db.execute(resolved_q_stmt)).scalar() or 0
+    
+    # Escalated queries
+    esc_q_stmt = select(func.count(Query.id)).where(
+        Query.company_id == current_owner.company_id,
+        Query.is_escalated == True,
+        Query.status == QueryStatus.PENDING
+    )
+    escalated_q = (await db.execute(esc_q_stmt)).scalar() or 0
 
-    # Total Queries
-    q_result = await db.execute(select(func.count(Query.id)).where(Query.company_id == current_owner.company_id))
-    total_queries = q_result.scalar_one()
+    return OwnerStats(
+        company_name=company.name if company else "N/A",
+        total_products=product_count,
+        total_team_members=team_count,
+        pending_queries=total_q - resolved_q,
+        resolved_queries=resolved_q,
+        escalated_queries=escalated_q,
+        products_missing_docs=product_count - products_with_docs
+    )
 
-    # Pending/Resolved
-    pending_result = await db.execute(select(func.count(Query.id)).where(Query.company_id == current_owner.company_id, Query.status == QueryStatus.PENDING))
-    pending_queries = pending_result.scalar_one()
-
-    resolved_result = await db.execute(select(func.count(Query.id)).where(Query.company_id == current_owner.company_id, Query.status == QueryStatus.RESOLVED))
-    resolved_queries = resolved_result.scalar_one()
-
-    # Personnel
-    u_result = await db.execute(select(func.count(User.id)).where(User.company_id == current_owner.company_id))
-    total_personnel = u_result.scalar_one()
-
-    return {
-        "company_name": company.name if company else "Unknown",
-        "total_products": total_products,
-        "total_queries": total_queries,
-        "pending_queries": pending_queries,
-        "resolved_queries": resolved_queries,
-        "total_personnel": total_personnel
-    }
-
-@router.get("/personnel", response_model=List[UserOut])
-async def list_company_personnel(
+@router.get("/company", response_model=CompanyOut)
+async def get_owner_company(
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
     if not current_owner.company_id:
-        return []
-    
-    result = await db.execute(select(User).where(User.company_id == current_owner.company_id))
-    return result.scalars().all()
+        raise HTTPException(status_code=400, detail="No linked company")
+    result = await db.execute(select(Company).where(Company.id == current_owner.company_id))
+    company = result.scalars().first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company record not found")
+    return company
 
-@router.patch("/company", response_model=CompanyOut)
-async def update_company_profile(
+@router.put("/company", response_model=CompanyOut)
+async def update_owner_company(
     company_update: CompanyUpdate,
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
     if not current_owner.company_id:
-        raise HTTPException(status_code=400, detail="Owner is not associated with any company")
-    
+        raise HTTPException(status_code=400, detail="No linked company")
+        
     result = await db.execute(select(Company).where(Company.id == current_owner.company_id))
     company = result.scalars().first()
     
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-    
-    update_data = company_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(company, field, value)
-    
+    for key, value in company_update.dict(exclude_unset=True).items():
+        setattr(company, key, value)
+        
     await db.commit()
     await db.refresh(company)
     return company
 
-@router.patch("/queries/{query_id}", response_model=QueryOut)
-async def update_query_status(
-    query_id: str,
-    status_update: str, # "PENDING" or "RESOLVED"
-    db: AsyncSession = Depends(get_db),
-    current_owner: User = Depends(get_current_active_owner)
-):
-    result = await db.execute(
-        select(Query).where(
-            Query.id == query_id,
-            Query.company_id == current_owner.company_id
-        )
-    )
-    query = result.scalars().first()
-    if not query:
-        raise HTTPException(status_code=404, detail="Query not found or access denied")
-    
-    query.status = status_update
-    await db.commit()
-    await db.refresh(query)
-    return query
-
-@router.post("/products/{product_id}/upload-manual", response_model=ProductOut)
-async def upload_product_manual(
-    product_id: str,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-    current_owner: User = Depends(get_current_active_owner)
-):
-    logger.info(f"TACTICAL HANDSHAKE: Product Intelligence Node {product_id} is receiving document '{file.filename}'")
-    
-    result = await db.execute(
-        select(Product).where(
-            Product.id == product_id,
-            Product.company_id == current_owner.company_id
-        )
-    )
-    product = result.scalars().first()
-    if not product:
-        logger.warning(f"ACCESS DENIED: Attempt to access product {product_id} was rejected for owner {current_owner.id}")
-        raise HTTPException(status_code=404, detail="Product not found or access denied")
-
-    content = ""
-    filename = file.filename.lower()
-    file_bytes = await file.read()
-    logger.info(f"FILE STREAM: Received {len(file_bytes)} bytes from Node.")
-
-    try:
-        if filename.endswith(".pdf"):
-            logger.info("ENGINE: Starting Deep PDF Intelligence Extraction Stage 1...")
-            doc = fitz.open(stream=file_bytes, filetype="pdf")
-            page_count = len(doc)
-            logger.info(f"ENGINE: Node has {page_count} pages. Scanning vectors...")
-            
-            for i, page in enumerate(doc):
-                page_text = page.get_text().strip()
-                if page_text:
-                    content += f"--- Page {i+1} ---\n{page_text}\n\n"
-            doc.close()
-        
-        elif filename.endswith((".txt", ".md")):
-            logger.info("ENGINE: Sequential Text Decoder active.")
-            content = file_bytes.decode("utf-8")
-        
-        else:
-            logger.error(f"ENGINE ERROR: File type '{filename}' is not supported by the current Node class.")
-            raise HTTPException(status_code=400, detail="Invalid Intelligence Source Class (Unsupported format)")
-
-        if not content.strip():
-            logger.warning(f"INTELLIGENCE VOID: Manual extraction for {filename} resulted in empty context. Image OCR recommended.")
-            raise HTTPException(status_code=400, detail="Intelligence Extraction Failed: No readable text signals found in the source document.")
-
-        # Update the product manually with the extracted intelligence
-        product.manual_content = content.strip()
-        await db.commit()
-        await db.refresh(product)
-        logger.info(f"SUCCESS: Intelligence Injection successful for {product_id}. {len(content)} context signs stored.")
-        return product
-
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"NODE CRITICAL FAILURE: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Critical Intelligence Decoupling: {str(e)}")
-
->>>>>>> Stashed changes
 @router.get("/products", response_model=List[ProductOut])
-async def get_owner_products(
+async def list_owner_products(
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
-    if not current_owner.company_id:
-        raise HTTPException(status_code=400, detail="Owner is not associated with any company")
-    
-    result = await db.execute(select(Product).where(Product.company_id == current_owner.company_id))
+    from sqlalchemy.orm import selectinload
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.documents))
+        .where(Product.company_id == current_owner.company_id)
+    )
     return result.scalars().all()
 
 @router.post("/products", response_model=ProductOut)
-async def create_product(
-    product_in: ProductCreate,
+async def create_owner_product(
+    product: ProductCreate,
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
     if not current_owner.company_id:
-        raise HTTPException(status_code=400, detail="Owner is not associated with any company")
-    
-    # Force company_id to the owner's company for security
+        raise HTTPException(status_code=400, detail="Owner not tied to a company node")
+        
     new_product = Product(
-        id=str(uuid.uuid4()),
-        company_id=current_owner.company_id, # Security: Use owner's company_id
-        name=product_in.name,
-        description=product_in.description,
-        manual_content=product_in.manual_content
+        **product.dict(exclude={"company_id"}),
+        company_id=current_owner.company_id
     )
     db.add(new_product)
     await db.commit()
     await db.refresh(new_product)
     return new_product
 
-@router.patch("/products/{product_id}", response_model=ProductOut)
-async def update_product(
+@router.put("/products/{product_id}", response_model=ProductOut)
+async def update_owner_product(
     product_id: str,
     product_update: ProductUpdate,
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
-    result = await db.execute(
-        select(Product).where(
-            Product.id == product_id,
-            Product.company_id == current_owner.company_id
-        )
-    )
-    product = result.scalars().first()
+    stmt = select(Product).where(Product.id == product_id, Product.company_id == current_owner.company_id)
+    product = (await db.execute(stmt)).scalars().first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found or access denied")
-    
-    update_data = product_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(product, field, value)
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    for key, value in product_update.dict(exclude_unset=True).items():
+        setattr(product, key, value)
         
     await db.commit()
     await db.refresh(product)
     return product
 
-@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_product(
+@router.delete("/products/{product_id}")
+async def delete_owner_product(
     product_id: str,
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
-    result = await db.execute(
-        select(Product).where(
-            Product.id == product_id,
-            Product.company_id == current_owner.company_id
-        )
-    )
-    product = result.scalars().first()
+    stmt = select(Product).where(Product.id == product_id, Product.company_id == current_owner.company_id)
+    product = (await db.execute(stmt)).scalars().first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found or access denied")
+        raise HTTPException(status_code=404, detail="Product not found")
     
     await db.delete(product)
     await db.commit()
-    return None
+    return {"status": "success"}
 
-@router.get("/queries", response_model=List[QueryOut])
-async def get_owner_queries(
+@router.get("/team", response_model=List[UserOut])
+async def list_owner_team(
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
-    if not current_owner.company_id:
-        return []
-    
+    result = await db.execute(select(User).where(User.company_id == current_owner.company_id))
+    return result.scalars().all()
+
+@router.get("/queries", response_model=List[QueryOut])
+async def list_owner_queries(
+    db: AsyncSession = Depends(get_db),
+    current_owner: User = Depends(get_current_active_owner)
+):
     result = await db.execute(select(Query).where(Query.company_id == current_owner.company_id))
     return result.scalars().all()
 
-@router.post("/setup-company", response_model=CompanyOut)
-async def setup_owner_company(
-    company_in: CompanyCreate,
+import httpx
+import base64
+try:
+    import fitz  # PyMuPDF
+    from PIL import Image
+    HAS_PDF_OCR = True
+except ImportError:
+    HAS_PDF_OCR = False
+
+from app.core.config import settings
+import io
+
+@router.post("/products/{product_id}/upload")
+async def upload_product_manual(
+    product_id: str,
+    file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_owner: User = Depends(get_current_active_owner)
 ):
-    if current_owner.company_id:
-        raise HTTPException(status_code=400, detail="Owner is already associated with a company")
-    
-    import hashlib
-    hashed_id = hashlib.sha256(company_in.name.encode()).hexdigest()[:16]
-    
-    # Check if company name already exists
-    result = await db.execute(select(Company).where(Company.name == company_in.name))
-    if result.scalars().first():
-        # Fallback if hash collision (unlikely) or name collision
-        # Note: In real app we might want more complex ID generation
-        raise HTTPException(status_code=400, detail="Company name already taken or collision")
+    stmt = select(Product).where(Product.id == product_id, Product.company_id == current_owner.company_id)
+    product = (await db.execute(stmt)).scalars().first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found or access denied")
 
-    new_company = Company(
-        id=hashed_id,
-        name=company_in.name,
-        description=company_in.description,
-        config=company_in.config
-    )
-    db.add(new_company)
+    extracted_text = ""
+    content_type = file.content_type
+
+    try:
+        contents = await file.read()
+        if content_type == "application/pdf":
+            doc = fitz.open(stream=contents, filetype="pdf")
+            full_text = []
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                page_text = page.get_text().strip()
+                if len(page_text) < 50:
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                    img_data = pix.tobytes("png")
+                    base64_image = base64.b64encode(img_data).decode('utf-8')
+                    async with httpx.AsyncClient(timeout=90.0) as client:
+                        response = await client.post(
+                            f"{settings.OLLAMA_BASE_URL}/api/generate",
+                            json={
+                                "model": settings.OLLAMA_MODEL,
+                                "prompt": "This is a scanned page from a product manual. Extract all readable text accurately. Do not add commentary.",
+                                "images": [base64_image],
+                                "stream": False
+                            }
+                        )
+                        if response.status_code == 200:
+                            page_text = response.json().get("response", "")
+                full_text.append(f"--- Page {page_num+1} ---\n{page_text}")
+            extracted_text = "\n\n".join(full_text)
+            doc.close()
+        elif content_type.startswith("image/"):
+            base64_image = base64.b64encode(contents).decode('utf-8')
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                response = await client.post(
+                    f"{settings.OLLAMA_BASE_URL}/api/generate",
+                    json={
+                        "model": settings.OLLAMA_MODEL,
+                        "prompt": "Extract all readable text from this image accurately. List only the text found.",
+                        "images": [base64_image],
+                        "stream": False
+                    }
+                )
+                if response.status_code == 200:
+                    extracted_text = response.json().get("response", "")
+        else:
+            extracted_text = contents.decode("utf-8")
+
+        if not extracted_text.strip():
+            raise HTTPException(status_code=400, detail="No readable text extracted")
+
+        # Save as new document node
+        new_doc = ProductDocument(
+            product_id=product_id,
+            filename=file.filename,
+            content=extracted_text,
+            file_type=content_type.split('/')[-1]
+        )
+        db.add(new_doc)
+        
+        # Aggregated manual content (re-build from all docs)
+        from sqlalchemy.orm import selectinload
+        await db.flush()
+        res = await db.execute(select(ProductDocument).where(ProductDocument.product_id == product_id))
+        all_docs = res.scalars().all()
+        product.manual_content = "\n\n".join([d.content for d in all_docs])
+        
+        await db.commit()
+        return {"status": "success", "message": f"Document indexed and added to {product.name} repository"}
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/documents/{doc_id}")
+async def delete_product_document(
+    doc_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_owner: User = Depends(get_current_active_owner)
+):
+    from sqlalchemy.orm import joinedload
+    stmt = select(ProductDocument).options(joinedload(ProductDocument.product)).where(ProductDocument.id == doc_id)
+    doc = (await db.execute(stmt)).scalars().first()
+    if not doc or doc.product.company_id != current_owner.company_id:
+        raise HTTPException(status_code=404, detail="Document not found")
     
-    # Link the owner to the new company
-    current_owner.company_id = hashed_id
+    product = doc.product
+    await db.delete(doc)
+    await db.flush()
+    
+    # Rebuild aggregated content
+    res = await db.execute(select(ProductDocument).where(ProductDocument.product_id == product.id))
+    all_docs = res.scalars().all()
+    product.manual_content = "\n\n".join([d.content for d in all_docs])
     
     await db.commit()
-    await db.refresh(new_company)
-    return new_company
+    return {"status": "success"}
+
+@router.get("/negotiations", response_model=List[QueryOut])
+async def list_negotiations(
+    db: AsyncSession = Depends(get_db),
+    current_owner: User = Depends(get_current_active_owner)
+):
+    stmt = select(Query).where(
+        Query.company_id == current_owner.company_id,
+        Query.is_escalated == True,
+        Query.status == QueryStatus.PENDING
+    ).order_by(Query.deadline_at.asc())
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+from fastapi import BackgroundTasks
+
+@router.post("/negotiations/{query_id}/resolve")
+async def resolve_negotiation(
+    query_id: str,
+    action: NegotiationAction,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_owner: User = Depends(get_current_active_owner)
+):
+    from sqlalchemy.orm import joinedload
+    stmt = select(Query).options(joinedload(Query.company)).where(Query.id == query_id, Query.company_id == current_owner.company_id)
+    query = (await db.execute(stmt)).scalars().first()
+    if not query:
+        raise HTTPException(status_code=404, detail="Negotiation node not found")
+        
+    query.final_answer = action.final_answer
+    query.status = action.status
+    query.resolved_at = datetime.utcnow()
+    
+    # Immediate Email Notification for Client
+    email_subject = f"Update regarding your query #{query.complaint_id}"
+    email_body = f"""
+    <div style="font-family: sans-serif; color: #333;">
+        <h2 style="color: #6d28d9;">Official Response from {query.company.name}</h2>
+        <p>Hello,</p>
+        <p>Our executive team has reviewed your request regarding your recent query.</p>
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 20px 0;">
+            <p><strong>Your Query:</strong> {query.query_text}</p>
+            <p><strong>Approved Response/Price:</strong> {action.final_answer}</p>
+        </div>
+        <p>If you have any further questions, please reply to this email.</p>
+        <p>Best regards,<br>Executive Management Team</p>
+    </div>
+    """
+    background_tasks.add_task(send_response_email, query.complainant_email, email_subject, email_body)
+    
+    await db.commit()
+    return {"status": "success"}

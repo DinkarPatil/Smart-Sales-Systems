@@ -13,3 +13,7 @@ python-dotenv
 resend
 aiosqlite
 email-validator
+pypdf
+httpx
+pymupdf
+Pillow

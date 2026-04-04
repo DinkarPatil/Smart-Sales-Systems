@@ -12,6 +12,30 @@ import { Layout } from './components/Layout';
 function App() {
   const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    const applyTheme = () => {
+      document.body.classList.remove('theme-amethyst-noir', 'theme-white');
+      const themePref = user?.theme || 'system';
+      
+      if (themePref === 'system') {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (!isDark) {
+          document.body.classList.add('theme-white');
+        }
+      } else if (themePref === 'white') {
+        document.body.classList.add('theme-white');
+      }
+    };
+
+    applyTheme();
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => applyTheme();
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [user?.theme]);
+
   // Mock auto-login or token check could go here
   
   return (
@@ -21,7 +45,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         
-        <Route element={<Layout user={user} />}>
+        <Route element={<Layout user={user} setUser={setUser} />}>
           <Route path="/admin" element={user?.role === 'Admin' ? <AdminDashboard /> : <Navigate to="/login" />} />
           <Route path="/manager" element={user?.role === 'Manager' ? <ManagerDashboard /> : <Navigate to="/login" />} />
           <Route path="/owner" element={user?.role === 'Owner' ? <OwnerDashboard /> : <Navigate to="/login" />} />

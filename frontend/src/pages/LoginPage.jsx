@@ -86,35 +86,35 @@ const LoginPage = ({ setUser }) => {
   };
 
   return (
-    <div className="fixed inset-0 w-full min-h-screen bg-slate-50 flex items-center justify-center p-6 overflow-hidden font-sans">
-      {/* Soft Background Accents */}
-      <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-primary-100/40 rounded-full blur-[80px] animate-pulse-slow"></div>
-      <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-indigo-100/30 rounded-full blur-[80px] animate-pulse-slow"></div>
+    <div className="fixed inset-0 w-full min-h-screen bg-amethyst-950 flex items-center justify-center p-6 overflow-hidden font-sans">
+      {/* Deep Amethyst Ambient Accents */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-primary/10 rounded-full blur-[120px] animate-pulse-slow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-secondary/5 rounded-full blur-[120px] animate-pulse-slow"></div>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-[480px] relative z-20"
       >
         {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-soft group hover:shadow-elevated transition-all">
-             <ShieldCheck size={30} className="text-primary-600 group-hover:scale-110 transition-transform" />
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-amethyst-900/50 backdrop-blur-xl border border-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-amethyst-glow group hover:shadow-fuchsia-glow transition-all duration-500">
+             <ShieldCheck size={32} className="text-accent-secondary group-hover:scale-110 transition-transform" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sales<span className="text-primary-600 italic">RAG</span> Interface</h2>
-          <p className="text-slate-500 mt-1 text-[10px] font-black uppercase tracking-[0.3em]">Secure Enterprise Intelligence</p>
+          <h2 className="text-3xl font-black text-white tracking-tight">Sales<span className="text-accent-primary italic">RAG</span></h2>
+          <p className="text-slate-500 mt-2 text-[10px] font-black uppercase tracking-[0.4em]">Secure Enterprise Intelligence</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-elevated p-8 lg:p-10 relative overflow-hidden">
-          {/* Subtle line decoration */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-indigo-500 to-primary-600"></div>
+        <div className="bg-amethyst-900/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/5 shadow-2xl p-8 lg:p-12 relative overflow-hidden">
+          {/* Neon Top Bar */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-accent-primary to-transparent opacity-50"></div>
           
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+          <div className="mb-10 text-center">
+            <h3 className="text-xl font-bold text-white tracking-tight">
               {isLogin ? 'Security Portal Access' : 'Create Access Token'}
             </h3>
-            <p className="text-slate-400 text-[10px] mt-1 font-bold uppercase tracking-widest">Awaiting clearing signals...</p>
+            <p className="text-slate-500 text-[9px] mt-1.5 font-bold uppercase tracking-widest">Awaiting clearing signals...</p>
           </div>
 
           <AnimatePresence mode="wait">
@@ -141,7 +141,7 @@ const LoginPage = ({ setUser }) => {
                     type="text" 
                     value={fullName} onChange={e => setFullName(e.target.value)}
                     placeholder="Enter Profile Name"
-                    className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-accent-primary/20 focus:bg-white/10 focus:border-accent-primary/50 outline-none transition-all placeholder:text-slate-600 text-sm font-medium text-white"
                     required
                   />
                 </div>
@@ -156,7 +156,7 @@ const LoginPage = ({ setUser }) => {
                   type="email" 
                   value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-accent-primary/20 focus:bg-white/10 focus:border-accent-primary/50 outline-none transition-all placeholder:text-slate-600 text-sm font-medium text-white"
                   required
                 />
               </div>
@@ -170,7 +170,7 @@ const LoginPage = ({ setUser }) => {
                   type="password" 
                   value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-accent-primary/20 focus:bg-white/10 focus:border-accent-primary/50 outline-none transition-all placeholder:text-slate-600 text-sm font-medium text-white"
                   required
                 />
               </div>
@@ -179,7 +179,7 @@ const LoginPage = ({ setUser }) => {
                   <button 
                     type="button"
                     onClick={() => navigate('/forgot-password')}
-                    className="text-primary-600/60 hover:text-primary-600 text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                    className="text-accent-secondary/60 hover:text-accent-secondary text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer"
                   >
                     Recover Access Credentials
                   </button>
@@ -196,7 +196,7 @@ const LoginPage = ({ setUser }) => {
                     type="password" 
                     value={adminSecret} onChange={e => setAdminSecret(e.target.value)}
                     placeholder="Enter Security Secret"
-                    className="w-full bg-slate-50/50 border-dashed border-slate-300 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-4 focus:ring-primary-50 focus:bg-white focus:border-primary-400 outline-none transition-all placeholder:text-slate-300 text-sm font-medium"
+                    className="w-full bg-white/5 border-dashed border-white/20 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-accent-primary/20 focus:bg-white/10 focus:border-accent-primary/50 outline-none transition-all placeholder:text-slate-600 text-sm font-medium text-white"
                   />
                 </div>
               </div>
@@ -206,7 +206,7 @@ const LoginPage = ({ setUser }) => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="group w-full py-4 bg-primary-600 hover:bg-primary-700 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] text-white shadow-lg shadow-primary-100 transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
+                className="group w-full py-4 bg-accent-primary hover:bg-accent-primary/90 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] text-white shadow-xl shadow-accent-primary/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -221,7 +221,7 @@ const LoginPage = ({ setUser }) => {
           <div className="mt-8 text-center pt-6 border-t border-slate-50">
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className="text-slate-400 hover:text-primary-600 text-[9px] font-black uppercase tracking-[0.25em] transition-all cursor-pointer"
+              className="text-slate-500 hover:text-accent-secondary text-[9px] font-black uppercase tracking-[0.25em] transition-all cursor-pointer"
             >
               {isLogin ? "Requirement: New Clearance" : "Existing Credentials Match"}
             </button>

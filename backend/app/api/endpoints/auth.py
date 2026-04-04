@@ -7,7 +7,7 @@ from app.core import security
 from app.core.config import settings
 from app.db.database import get_db
 from app.models.models import User, UserRole
-from app.schemas.schemas import Token, UserCreate, UserOut, PasswordResetRequest, PasswordReset, Msg
+from app.schemas.schemas import Token, UserCreate, UserUpdate, UserOut, PasswordResetRequest, PasswordReset, Msg
 from app.api import deps
 from app.services.email_service import send_response_email
 
@@ -141,4 +141,18 @@ async def login(
 
 @router.get("/me", response_model=UserOut)
 async def get_me(current_user: User = Depends(deps.get_current_active_user)):
+    return current_user
+
+@router.put("/me", response_model=UserOut)
+async def update_me(
+    user_in: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    if user_in.theme is not None:
+        current_user.theme = user_in.theme
+        
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
     return current_user

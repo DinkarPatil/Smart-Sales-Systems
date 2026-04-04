@@ -3,73 +3,213 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-slate-50 text-slate-800 min-h-screen font-sans antialiased selection:bg-primary-100 selection:text-primary-700 overflow-x-hidden;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(241, 245, 249, 1) 0, transparent 50%), 
-      radial-gradient(at 50% 0%, rgba(226, 232, 240, 0.4) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, rgba(203, 213, 225, 0.2) 0, transparent 50%);
+  :root {
+    --color-amethyst-950: 2 6 23;
+    --color-amethyst-900: 15 23 42;
+    --color-amethyst-800: 30 41 59;
+    --color-amethyst-700: 51 65 85;
+    --color-amethyst-600: 71 85 105;
+    --color-amethyst-500: 100 116 139;
+    --color-amethyst-400: 148 163 184;
+    --color-amethyst-300: 203 213 225;
+    --color-amethyst-200: 226 232 240;
+
+    --color-accent-primary: 124 58 237;
+    --color-accent-secondary: 232 121 249;
+    --color-accent-aurora: 34 211 238;
+
+    --color-slate-900: 15 23 42;
+    --color-slate-800: 30 41 59;
+    --color-slate-700: 51 65 85;
+    --color-slate-600: 71 85 105;
+    --color-slate-500: 100 116 139;
+    --color-slate-400: 148 163 184;
+    --color-slate-300: 203 213 225;
+    --color-slate-200: 226 232 240;
+
+    --color-white: 255 255 255;
+    --color-black: 0 0 0;
+
+    --bg-body: rgb(var(--color-amethyst-950));
+    --text-body: rgb(var(--color-amethyst-200));
+    
+    --ambient-light-1: rgba(124, 58, 237, 0.15);
+    --ambient-light-2: rgba(232, 121, 249, 0.1);
+    --ambient-light-3: rgba(34, 211, 238, 0.05);
+
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(124, 58, 237, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.5);
   }
 
-  /* Custom Scrollbar for Light Mode */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  .theme-white {
+    --color-amethyst-950: 255 255 255;
+    --color-amethyst-900: 248 250 252;
+    --color-amethyst-800: 241 245 249;
+    --color-amethyst-700: 226 232 240;
+    --color-amethyst-600: 203 213 225;
+    --color-amethyst-500: 148 163 184;
+    --color-amethyst-400: 100 116 139;
+    --color-amethyst-300: 71 85 105;
+    --color-amethyst-200: 30 41 59;
+
+    --color-accent-primary: 109 40 217;
+    --color-accent-secondary: 217 70 239;
+    --color-accent-aurora: 8 145 178;
+
+    --color-slate-900: 248 250 252;
+    --color-slate-800: 241 245 249;
+    --color-slate-700: 226 232 240;
+    --color-slate-600: 203 213 225;
+    --color-slate-500: 148 163 184;
+    --color-slate-400: 100 116 139;
+    --color-slate-300: 71 85 105;
+    --color-slate-200: 30 41 59;
+
+    --color-white: 2 6 23; /* Invert white for light mode compatibility */
+    --color-black: 255 255 255;
+
+    --bg-body: rgb(var(--color-amethyst-950));
+    --text-body: rgb(var(--color-amethyst-200));
+
+    --ambient-light-1: rgba(109, 40, 217, 0.05);
+    --ambient-light-2: rgba(217, 70, 239, 0.03);
+    --ambient-light-3: rgba(8, 145, 178, 0.02);
+
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(109, 40, 217, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.05);
   }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+
+  body {
+    background-color: var(--bg-body);
+    color: var(--text-body);
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(at 0% 0%,   var(--ambient-light-1) 0, transparent 55%),
+      radial-gradient(at 100% 0%, var(--ambient-light-2) 0, transparent 55%),
+      radial-gradient(at 50% 100%, var(--ambient-light-3) 0, transparent 60%);
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+    background: rgba(244, 63, 94, 0.12);
+    border-radius: 9999px;
   }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 63, 94, 0.25);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 }
 
 @layer components {
   .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-slate-200/50 shadow-soft ring-1 ring-slate-900/[0.05];
-  }
-
-  /* Redefining glass-dark for light surfaces */
-  .glass-dark {
-    @apply bg-white/95 backdrop-blur-2xl border border-slate-200/80 shadow-elevated ring-1 ring-slate-900/[0.03];
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px var(--glass-shadow);
   }
 
   .glass-card {
-    @apply bg-white rounded-3xl border border-slate-200/60 shadow-soft hover:shadow-elevated hover:bg-slate-50/50 transition-all duration-500;
+    background-color: var(--glass-bg);
+    border-radius: 2rem;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px var(--glass-shadow);
+    transition: all 0.5s ease;
+  }
+  .glass-card:hover {
+    border-color: rgba(232, 121, 249, 0.3);
+    box-shadow: 0 0 35px rgba(124, 58, 237, 0.15);
   }
 
   .btn-primary {
-    @apply px-6 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg shadow-primary-200 hover:shadow-primary-300 hover:-translate-y-0.5 active:scale-95 transition-all duration-300;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #7c3aed 0%, #e879f9 55%, #22d3ee 100%);
+    border-radius: 1rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: white;
+    box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .btn-primary:hover  { transform: scale(1.05); }
+  .btn-primary:active { transform: scale(0.95); }
 
   .btn-glass {
-    @apply px-6 py-3 bg-white border border-slate-200/80 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300;
+    padding: 1rem 2rem;
+    background-color: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 1rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #cbd5e1;
+    transition: all 0.3s;
+  }
+  .btn-glass:hover {
+    background-color: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: white;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-slate-900 via-slate-800 to-slate-500 bg-clip-text text-transparent;
+    background: linear-gradient(to right, #ffffff, #c4b5fd, #e879f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .text-gradient-primary {
-    @apply bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent;
+  .text-aurora {
+    color: #22d3ee;
   }
 }
 
-/* Custom Animation Utilities (Lightened) */
+/* ── Rose Gold utility classes (safe outside @apply) ── */
+
+.bg-aurora-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #e879f9 55%, #22d3ee 100%);
+}
+
+/* Amethyst shimmer variant for elevated elements */
+.bg-amethyst-gradient {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #e879f9 100%);
+}
+
+.shadow-amethyst-glow {
+  box-shadow: 0 0 35px rgba(124, 58, 237, 0.25);
+}
+
+.shadow-aurora-glow {
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.25);
+}
+
+.shadow-fuchsia-glow {
+  box-shadow: 0 0 20px rgba(232, 121, 249, 0.3);
+}
+
+/* Animations */
 .animate-pulse-slow {
   animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  50%       { opacity: 0.8; }
 }
-
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50%       { transform: translateY(-10px); }
 }

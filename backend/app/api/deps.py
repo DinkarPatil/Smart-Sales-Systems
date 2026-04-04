@@ -43,12 +43,42 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def get_current_active_admin(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrative clearance required",
+        )
+    return current_user
+
 async def get_current_active_owner(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
     if current_user.role != UserRole.OWNER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges",
+            detail="Owner clearance required",
+        )
+    return current_user
+
+async def get_current_active_manager(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    if current_user.role != UserRole.MANAGER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Managerial clearance required",
+        )
+    return current_user
+
+async def get_current_active_sales_rep(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="SalesRep clearance required",
         )
     return current_user
