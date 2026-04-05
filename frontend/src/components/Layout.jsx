@@ -129,13 +129,13 @@ export const Layout = ({ user, setUser }) => {
           </div>
         </div>
 
-        <nav className="flex-1 px-6 space-y-3 mt-12 overflow-y-auto border-t border-white/5 pt-12">
-          <p className="px-6 text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-8">Main Grid</p>
+        <nav className="flex-1 px-4 space-y-2 mt-12 overflow-y-auto border-t border-white/5 pt-12">
+          <p className="px-4 text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-6">Main Grid</p>
           {navItems.filter(item => item.show).map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`group flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-500 relative overflow-hidden ${
+              className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-500 relative overflow-hidden ${
                 isActive(item.path) 
                 ? 'bg-accent-primary/10 text-white font-bold' 
                 : 'text-slate-400 hover:bg-white/5 hover:text-white'
@@ -144,11 +144,11 @@ export const Layout = ({ user, setUser }) => {
               {isActive(item.path) && (
                 <motion.div 
                    layoutId="active-pill-amethyst"
-                   className={`absolute left-0 w-1.5 h-6 rounded-r-full shadow-fuchsia-glow ${item.alert ? 'bg-red-500' : 'bg-accent-secondary'}`}
+                   className={`absolute left-0 w-1 h-6 rounded-r-full shadow-fuchsia-glow ${item.alert ? 'bg-red-500' : 'bg-accent-secondary'}`}
                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
-              <item.icon size={22} className={`${isActive(item.path) ? (item.alert ? 'text-red-500' : 'text-accent-secondary') : 'group-hover:text-accent-primary'} ${item.alert && !isActive(item.path) ? 'text-red-500/80 animate-pulse' : ''} transition-colors duration-500`} />
+              <item.icon size={20} className={`${isActive(item.path) ? (item.alert ? 'text-red-500' : 'text-accent-secondary') : 'group-hover:text-accent-primary'} ${item.alert && !isActive(item.path) ? 'text-red-500/80 animate-pulse' : ''} transition-colors duration-500`} />
               <div className="flex items-center justify-between flex-1">
                  <span className={`tracking-wide text-sm font-semibold ${item.alert && !isActive(item.path) ? 'text-red-500/80' : ''}`}>{item.name}</span>
                  {item.alert && (
@@ -159,28 +159,28 @@ export const Layout = ({ user, setUser }) => {
           ))}
         </nav>
 
-        <div className="p-10 mt-auto border-t border-white/5 bg-white/[0.02]">
-          <div className="flex items-center gap-4 mb-8 px-2">
-             <div className="w-14 h-14 rounded-2xl bg-amethyst-900 border border-white/10 flex items-center justify-center text-accent-secondary font-black text-xl shadow-inner">
+        <div className="p-6 mt-auto border-t border-white/5 bg-white/[0.02]">
+          <div className="flex items-center gap-3 mb-6 px-1">
+             <div className="w-10 h-10 rounded-xl bg-amethyst-900 border border-white/10 flex items-center justify-center text-accent-secondary font-black text-lg shadow-inner shrink-0">
                 {user?.full_name?.charAt(0) || 'U'}
              </div>
              <div className="flex-1 overflow-hidden">
                 <p className="font-bold text-sm text-white truncate leading-none">{user?.full_name || 'Operator'}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2.5">{user?.role || 'Access'}</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">{user?.role || 'Access'}</p>
              </div>
           </div>
           <button 
             onClick={() => setShowSettings(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 mb-2 rounded-xl bg-white/5 hover:bg-accent-primary/10 text-slate-400 hover:text-accent-primary transition-all font-black text-[9px] uppercase tracking-[0.3em] border border-white/5 hover:border-accent-primary/20 shadow-sm active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-2 mb-2 rounded-lg bg-white/5 hover:bg-accent-primary/10 text-slate-400 hover:text-accent-primary transition-all font-black text-[9px] uppercase tracking-[0.3em] border border-white/5 hover:border-accent-primary/20 shadow-sm active:scale-95"
           >
-            <Settings size={16} />
+            <Settings size={14} />
             Settings
           </button>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all font-black text-[9px] uppercase tracking-[0.3em] border border-white/5 hover:border-red-500/20 shadow-sm active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all font-black text-[9px] uppercase tracking-[0.3em] border border-white/5 hover:border-red-500/20 shadow-sm active:scale-95"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             Logout
           </button>
         </div>

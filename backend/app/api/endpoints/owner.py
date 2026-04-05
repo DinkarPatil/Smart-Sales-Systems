@@ -157,8 +157,11 @@ async def create_owner_product(
     db.add(log)
     
     await db.commit()
-    await db.refresh(new_product)
-    return new_product
+    
+    from sqlalchemy.orm import selectinload
+    stmt = select(Product).options(selectinload(Product.documents)).where(Product.id == new_product.id)
+    result = await db.execute(stmt)
+    return result.scalars().first()
 
 @router.put("/products/{product_id}", response_model=ProductOut)
 async def update_owner_product(
@@ -185,8 +188,11 @@ async def update_owner_product(
     db.add(log)
         
     await db.commit()
-    await db.refresh(product)
-    return product
+    
+    from sqlalchemy.orm import selectinload
+    stmt = select(Product).options(selectinload(Product.documents)).where(Product.id == product.id)
+    result = await db.execute(stmt)
+    return result.scalars().first()
 
 @router.delete("/products/{product_id}")
 async def delete_owner_product(

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Building2, Users, Database, MessageSquare, TrendingUp, Search, Plus, Filter, Loader2, Edit2, Trash2, Globe, Heart, Activity, BarChart3, ChevronRight, X, LayoutGrid, Laptop, Sparkles, FileText, Upload, CheckCircle2, AlertCircle, Home, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { Building2, Users, Database, MessageSquare, TrendingUp, Search, Plus, Filter, Loader2, Edit2, Trash2, Globe, Heart, Activity, BarChart3, ChevronRight, History, X, LayoutGrid, Laptop, Sparkles, FileText, Upload, CheckCircle2, AlertCircle, Home, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const OwnerDashboard = () => {
@@ -661,34 +661,34 @@ const OwnerDashboard = () => {
       <AnimatePresence>
         {/* Edit Asset Modal */}
         {showEditProduct && selectedProduct && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
             <motion.div 
                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-               className="w-full max-w-xl bg-amethyst-950 border border-white/10 rounded-[3.5rem] p-12 z-10 shadow-2xl relative overflow-hidden"
+               className="w-full max-w-xl bg-amethyst-950 border border-white/10 rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-8 md:p-12 z-10 shadow-2xl relative overflow-y-auto max-h-[90vh] custom-scrollbar"
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-amethyst-gradient"></div>
-              <div className="flex items-center justify-between mb-10">
-                 <h3 className="text-2xl font-black text-white tracking-widest italic uppercase">Edit Node <span className="text-accent-primary">Parameters</span></h3>
-                 <button onClick={() => setShowEditProduct(false)} className="p-3 bg-amethyst-900 rounded-full text-slate-400 hover:text-white transition-all"><X /></button>
+              <div className="flex items-center justify-between mb-6 sm:mb-8 md:mb-10">
+                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-widest italic uppercase pr-4">Edit Node <span className="text-accent-primary">Parameters</span></h3>
+                 <button onClick={() => setShowEditProduct(false)} className="p-3 bg-amethyst-900 rounded-full text-slate-400 hover:text-white transition-all shrink-0"><X size={20} /></button>
               </div>
 
-              <form onSubmit={handleUpdateProduct} className="space-y-6">
+              <form onSubmit={handleUpdateProduct} className="space-y-5 sm:space-y-6">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-2">Market Price (Display)</label>
-                    <input value={selectedProduct.price} onChange={e => setSelectedProduct({...selectedProduct, price: e.target.value})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold" />
+                    <input value={selectedProduct.price} onChange={e => setSelectedProduct({...selectedProduct, price: e.target.value})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold outline-none" />
                  </div>
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-2">Base Cost (Internal)</label>
-                       <input type="number" value={selectedProduct.base_price} onChange={e => setSelectedProduct({...selectedProduct, base_price: parseInt(e.target.value)})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold" />
+                       <input type="number" value={selectedProduct.base_price} onChange={e => setSelectedProduct({...selectedProduct, base_price: parseInt(e.target.value)})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold outline-none" />
                     </div>
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-2">Standard Max Disc%</label>
-                       <input type="number" value={selectedProduct.max_discount_pct} onChange={e => setSelectedProduct({...selectedProduct, max_discount_pct: parseInt(e.target.value)})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold" />
+                       <input type="number" value={selectedProduct.max_discount_pct} onChange={e => setSelectedProduct({...selectedProduct, max_discount_pct: parseInt(e.target.value)})} className="w-full bg-amethyst-900 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 transition-all text-white font-bold outline-none" />
                     </div>
                  </div>
-                 <div className="pt-4">
-                    <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-amethyst-gradient rounded-2xl text-white font-black text-[11px] uppercase tracking-widest shadow-amethyst-glow transition-all">
+                 <div className="pt-2 sm:pt-4">
+                    <button type="submit" disabled={isSubmitting} className="w-full py-4 sm:py-5 bg-amethyst-gradient rounded-2xl text-white font-black text-[10px] sm:text-[11px] uppercase tracking-widest shadow-amethyst-glow transition-all active:scale-95 hover:scale-[1.02]">
                        {isSubmitting ? 'Synchronizing Node...' : 'Commit Meta-Data'}
                     </button>
                  </div>
@@ -699,84 +699,84 @@ const OwnerDashboard = () => {
 
         {/* Provision Asset Modal */}
         {showAddProduct && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-2xl bg-amethyst-950 border border-white/10 rounded-[3.5rem] p-10 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] relative overflow-hidden"
+              className="w-full max-w-2xl bg-amethyst-950 border border-white/10 rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-8 md:p-10 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] relative overflow-y-auto max-h-[90vh] custom-scrollbar"
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-amethyst-gradient"></div>
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-[1.2rem] bg-accent-primary/10 text-accent-primary flex items-center justify-center border border-accent-primary/20">
-                    <Database size={28} />
+              <div className="flex items-center justify-between mb-6 sm:mb-8 md:mb-10">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[1.2rem] bg-accent-primary/10 text-accent-primary flex items-center justify-center border border-accent-primary/20 shrink-0">
+                    <Database size={24} className="sm:w-7 sm:h-7" />
                   </div>
-                  <h3 className="text-2xl font-black text-white tracking-tight italic">Provision <span className="text-accent-primary">New Asset</span></h3>
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight italic line-clamp-1">Provision <span className="text-accent-primary">New Asset</span></h3>
                 </div>
-                <button onClick={() => setShowAddProduct(false)} className="p-4 bg-amethyst-900 rounded-full text-slate-400 hover:text-white transition-all"><X /></button>
+                <button onClick={() => setShowAddProduct(false)} className="p-3 sm:p-4 bg-amethyst-900 rounded-full text-slate-400 hover:text-white transition-all shrink-0"><X size={20} /></button>
               </div>
 
-              <form onSubmit={handleAddProduct} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <form onSubmit={handleAddProduct} className="space-y-5 sm:space-y-6 md:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-2">Asset Name</label>
-                    <input required autoFocus value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} placeholder="e.g. OMEGA CORE v2" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all placeholder:text-slate-700 text-sm font-bold text-white shadow-inner" />
+                    <input required autoFocus value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} placeholder="e.g. OMEGA CORE v2" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all placeholder:text-slate-700 text-sm font-bold text-white shadow-inner" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-2">Market Price (Display)</label>
-                    <input required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="99.00" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all placeholder:text-slate-700 text-sm font-bold text-white shadow-inner" />
+                    <input required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="99.00" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all placeholder:text-slate-700 text-sm font-bold text-white shadow-inner" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Base Cost (Numerical)</label>
-                    <input type="number" value={newProduct.base_price} onChange={e => setNewProduct({...newProduct, base_price: parseInt(e.target.value)})} placeholder="10000" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-4 px-6 text-sm font-bold text-white outline-none bg-transparent" />
+                    <input type="number" value={newProduct.base_price} onChange={e => setNewProduct({...newProduct, base_price: parseInt(e.target.value)})} placeholder="10000" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 text-sm font-bold text-white outline-none bg-transparent focus:bg-amethyst-900 focus:border-accent-primary/30 focus:ring-4 focus:ring-accent-primary/10 transition-all shadow-inner" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Max Pre-Auth Disc%</label>
-                    <input type="number" value={newProduct.max_discount_pct} onChange={e => setNewProduct({...newProduct, max_discount_pct: parseInt(e.target.value)})} placeholder="15" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-4 px-6 text-sm font-bold text-white outline-none bg-transparent" />
+                    <input type="number" value={newProduct.max_discount_pct} onChange={e => setNewProduct({...newProduct, max_discount_pct: parseInt(e.target.value)})} placeholder="15" className="w-full bg-amethyst-950 border border-white/5 rounded-2xl py-3 sm:py-4 px-5 sm:px-6 text-sm font-bold text-white outline-none bg-transparent focus:bg-amethyst-900 focus:border-accent-primary/30 focus:ring-4 focus:ring-accent-primary/10 transition-all shadow-inner" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-2">Technical Description</label>
-                  <textarea value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} placeholder="Context for RAG intelligence..." className="w-full h-24 bg-amethyst-950 border border-white/5 rounded-[1.5rem] py-4 px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all resize-none text-sm leading-relaxed font-bold text-slate-400 shadow-inner" />
+                  <textarea value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} placeholder="Context for RAG intelligence..." className="w-full h-20 sm:h-24 bg-amethyst-950 border border-white/5 rounded-[1.5rem] py-3 sm:py-4 px-5 sm:px-6 focus:ring-4 focus:ring-accent-primary/10 focus:bg-amethyst-900 focus:border-accent-primary/30 outline-none transition-all resize-none text-sm leading-relaxed font-bold text-slate-400 shadow-inner" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-2">Neural Sync (PDF/TXT/IMG)</label>
                   <div 
                     onClick={() => provisionFileInputRef.current?.click()}
-                    className={`relative w-full h-32 rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center p-4 transition-all cursor-pointer group ${provisionFile ? 'border-accent-secondary bg-accent-secondary/5' : 'border-white/10 bg-amethyst-950 hover:border-accent-primary/40 hover:bg-white/[0.02]'}`}
+                    className={`relative w-full h-24 sm:h-32 rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center p-3 sm:p-4 transition-all cursor-pointer group ${provisionFile ? 'border-accent-secondary bg-accent-secondary/5' : 'border-white/10 bg-amethyst-950 hover:border-accent-primary/40 hover:bg-white/[0.02]'}`}
                   >
                      <input type="file" className="hidden" ref={provisionFileInputRef} accept=".pdf,.txt,image/*" onChange={(e) => setProvisionFile(e.target.files[0])} />
                      
                      {provisionFile ? (
-                       <div className="text-center space-y-2">
-                          <div className="w-10 h-10 bg-accent-secondary/10 rounded-xl flex items-center justify-center text-accent-secondary mx-auto animate-float">
-                             <FileText size={20} />
+                       <div className="text-center space-y-1 sm:space-y-2 z-10">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-accent-secondary/10 rounded-xl flex items-center justify-center text-accent-secondary mx-auto animate-float">
+                             <FileText size={18} className="sm:w-5 sm:h-5" />
                           </div>
                           <p className="text-[10px] font-black text-white italic truncate max-w-[150px] mx-auto">{provisionFile.name}</p>
                           <button onClick={(e) => {e.stopPropagation(); setProvisionFile(null)}} className="text-[8px] font-black text-red-500 uppercase hover:underline">Remove Node</button>
                        </div>
                      ) : (
-                       <div className="text-center space-y-2">
-                          <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-600 mx-auto group-hover:text-accent-primary group-hover:scale-110 transition-all">
-                             <Upload size={20} />
+                       <div className="text-center space-y-1 sm:space-y-2 z-10">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-600 mx-auto group-hover:text-accent-primary group-hover:scale-110 transition-all">
+                             <Upload size={18} className="sm:w-5 sm:h-5" />
                           </div>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Grounding Doc</p>
+                          <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Grounding Doc</p>
                           <p className="text-[8px] font-medium text-slate-700">Optional RAG Node</p>
                        </div>
                      )}
                   </div>
                 </div>
 
-                <div className="pt-6">
+                <div className="pt-2 sm:pt-6">
                   <button 
                     type="submit" disabled={isSubmitting}
-                    className="w-full py-5 bg-amethyst-gradient rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.3em] text-white shadow-fuchsia-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                    className="w-full py-4 sm:py-5 bg-amethyst-gradient rounded-[1.5rem] font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white shadow-fuchsia-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2 sm:gap-3 active:scale-95 disabled:opacity-50"
                   >
-                    {isSubmitting ? <><Loader2 className="animate-spin" /><span>Initializing Knowledge Base...</span></> : <><Sparkles size={18}/> Provision & Connect Asset</>}
+                    {isSubmitting ? <><Loader2 className="animate-spin shrink-0" size={16} /><span>Initializing Knowledge Base...</span></> : <><Sparkles size={16} className="shrink-0" /> Provision & Connect Asset</>}
                   </button>
                 </div>
               </form>

@@ -203,3 +203,8 @@ dist-ssr/
 # OS
 .DS_Store
 Thumbs.db
+
+# Project logs and temporary files
+backend/error.txt
+backend/system_diagnostic.log
+tmp/
