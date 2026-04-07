@@ -72,8 +72,9 @@ class ProductDocument(Base):
     product = relationship("Product", back_populates="documents")
 
 class QueryStatus(str, enum.Enum):
-    PENDING = "pending"
-    RESOLVED = "resolved"
+    PENDING = "Pending"
+    RESOLVED = "Resolved"
+    ESCALATED = "Escalated"
 
 class Query(Base):
     __tablename__ = "queries"
@@ -94,6 +95,7 @@ class Query(Base):
     escalated_at = Column(DateTime(timezone=True), nullable=True)
     deadline_at = Column(DateTime(timezone=True), nullable=True)
     priority = Column(String, default="normal") # "normal", "high"
+    escalation_reason = Column(Text, nullable=True) # Reason for escalation
     tokens = Column(Integer, default=0)
     
     company = relationship("Company", back_populates="queries")

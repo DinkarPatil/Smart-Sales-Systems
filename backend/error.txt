@@ -33,14 +33,52 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^
   File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\aiosqlite\core.py", line 63, in _connection_worker_thread
     result = function()
-sqlite3.OperationalError: no such column: queries.is_escalated
+sqlite3.OperationalError: no such column: queries.escalation_reason
 
 The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\backend\app\api\endpoints\owner.py", line 61, in get_owner_stats
-    escalated_q = (await db.execute(esc_q_stmt)).scalar() or 0
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\middleware\cors.py", line 96, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\middleware\cors.py", line 154, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\fastapi\routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\fastapi\routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\fastapi\routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\fastapi\routing.py", line 328, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Dinkar\Desktop\Sales RAG Systems\backend\app\api\endpoints\sales_rep.py", line 97, in list_rep_queries
+    result = await db.execute(stmt)
+             ^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
     result = await greenlet_spawn(
              ^^^^^^^^^^^^^^^^^^^^^
@@ -142,9 +180,9 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^
   File "C:\Users\Dinkar\Desktop\Sales RAG Systems\.venv\Lib\site-packages\aiosqlite\core.py", line 63, in _connection_worker_thread
     result = function()
-sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: queries.is_escalated
-[SQL: SELECT count(queries.id) AS count_1 
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: queries.escalation_reason
+[SQL: SELECT queries.id, queries.complaint_id, queries.company_id, queries.sales_rep_id, queries.complainant_email, queries.query_text, queries.ai_generated_answer, queries.final_answer, queries.status, queries.assigned_at, queries.resolved_at, queries.created_at, queries.is_escalated, queries.escalated_at, queries.deadline_at, queries.priority, queries.escalation_reason, queries.tokens 
 FROM queries 
-WHERE queries.company_id = ? AND queries.is_escalated = 1 AND queries.status = ?]
-[parameters: ('b5d4045c3f466fa9', <QueryStatus.PENDING: 'pending'>)]
+WHERE queries.sales_rep_id = ?]
+[parameters: ('fbf3f4a5-8757-49f9-be91-54f0afc290df',)]
 (Background on this error at: https://sqlalche.me/e/20/e3q8)

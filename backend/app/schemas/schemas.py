@@ -89,10 +89,11 @@ class OwnerStats(BaseModel):
     high_priority_pending: int = 0
 
 class SalesRepStats(BaseModel):
-    resolved_count: int
-    pending_count: int
-    assigned_count: int
-    avg_resolution_time: Optional[float] = 0.0
+    active_queries: int
+    resolved_queries: int
+    escalated_queries: int
+    efficiency_score: float
+    avg_response_time: float
 
 class QueryBulkAssign(BaseModel):
     query_ids: List[str]
@@ -173,9 +174,14 @@ class QueryOut(QueryBase):
     escalated_at: Optional[datetime] = None
     deadline_at: Optional[datetime] = None
     priority: str = "normal"
+    escalation_reason: Optional[str] = None
     tokens: int = 0
     class Config:
         from_attributes = True
+
+class EscalateRequest(BaseModel):
+    priority: str = "normal"
+    reason: str
 
 class NegotiationAction(BaseModel):
     final_answer: str
