@@ -262,3 +262,12 @@ async def get_rep_products(
     stmt = select(Product).where(Product.company_id == current_user.company_id)
     result = await db.execute(stmt)
     return result.scalars().all()
+
+@router.get("/products", response_model=List[ProductOut])
+async def get_products(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_sales_rep)
+):
+    stmt = select(Product).where(Product.company_id == current_user.company_id)
+    result = await db.execute(stmt)
+    return result.scalars().all()
