@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Smart Sales Systems — Python backend dependencies (pinned).
+# Tested against Python 3.11+. Install: pip install -r requirements.txt
+# ---------------------------------------------------------------------------
+
+# --- Web framework / ASGI server ------------------------------------------
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17          # form/file upload parsing
+starlette==0.41.3                 # transitive pin for FastAPI compatibility
+
+# --- Configuration / validation -------------------------------------------
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+email-validator==2.2.0            # required by pydantic EmailStr
+
+# --- Database / ORM (async SQLite) ----------------------------------------
+SQLAlchemy==2.0.36
+aiosqlite==0.20.0
+
+# --- Auth & security -------------------------------------------------------
+python-jose[cryptography]==3.3.0  # JWT (login + password-reset tokens)
+passlib[bcrypt]==1.7.4            # bcrypt password hashing
+bcrypt==4.2.1                     # passlib backend (pin to avoid >=5 break)
+
+# --- RAG pipeline (LlamaIndex + Groq Llama-3) -----------------------------
+llama-index==0.12.5
+llama-index-llms-groq==0.3.1
+llama-index-embeddings-huggingface==0.4.0
+groq==0.13.0                      # SDK used by llama-index-llms-groq
+
+# --- Document ingestion / OCR ---------------------------------------------
+pypdf==5.1.0
+pymupdf==1.24.14                  # `import fitz` — text + raster extraction
+Pillow==11.0.0                    # image manipulation for OCR pipeline
+
+# --- HTTP client (Ollama VLM OCR + generic) -------------------------------
+httpx==0.28.1
+
+# --- Outbound email --------------------------------------------------------
+resend==2.4.0

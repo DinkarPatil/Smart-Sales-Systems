@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: 246 240 230;          /* warm ivory */
+  --paper-2: 240 232 219;        /* slightly deeper card surface */
+  --ink: 24 24 27;               /* near-black for body */
+  --ink-soft: 64 64 72;
+  --ink-mute: 113 113 122;
+  --rule: 24 24 27 / 0.12;
+  --brand: 109 40 217;           /* keep for auth utilities */
+  --accent: 178 64 26;           /* rust amber, used SPARINGLY */
+}
+
+html, body { height: 100%; }
+
+html {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  background-color: rgb(var(--paper));
+  color: rgb(var(--ink));
+}
+
+body {
+  @apply antialiased;
+  background-image:
+    radial-gradient(rgba(24,24,27,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+.font-display { font-family: var(--font-display), ui-serif, Georgia, serif; }
+.font-body    { font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif; }
+.font-mono    { font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace; }
+
+/* ------------------------------------------------------------------ */
+/* Auth utilities (used by /login etc. — kept tidy and on-brand)       */
+/* ------------------------------------------------------------------ */
+.brand-button {
+  @apply inline-flex items-center justify-center rounded-md bg-brand-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.input {
+  @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+}
+.label { @apply mb-1 block text-sm font-medium text-slate-700; }
+.error-text { @apply mt-1 text-xs text-red-600; }
+.muted { @apply text-sm text-slate-500; }
+.card {
+  @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm;
+}
+
+/* ------------------------------------------------------------------ */
+/* Landing page motion + decoration                                    */
+/* ------------------------------------------------------------------ */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise   { animation: rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.delay-1 { animation-delay:  60ms; }
+.delay-2 { animation-delay: 140ms; }
+.delay-3 { animation-delay: 220ms; }
+.delay-4 { animation-delay: 320ms; }
+.delay-5 { animation-delay: 460ms; }
+.delay-6 { animation-delay: 620ms; }
+
+.rule-h {
+  height: 1px;
+  background: linear-gradient(to right, rgb(24 24 27 / 0.35), rgb(24 24 27 / 0));
+}
+
+.numbered-section::before {
+  content: counter(section, decimal-leading-zero);
+  counter-increment: section;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: rgb(var(--accent));
+}
+
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(var(--accent));
+}

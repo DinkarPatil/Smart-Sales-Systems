@@ -54,3 +54,27 @@ def verify_password_reset_token(token: str) -> Union[str, None]:
         return decoded_token["sub"]
     except jwt.JWTError:
         return None
+
+
+def generate_email_verification_token(email: str) -> str:
+    """Short-lived JWT (24h) used to verify a customer's email address."""
+    now = datetime.utcnow()
+    expires = now + timedelta(hours=24)
+    encoded_jwt = jwt.encode(
+        {"exp": expires, "nbf": now, "sub": email, "type": "email_verification"},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+    return encoded_jwt
+
+
+def verify_email_verification_token(token: str) -> Union[str, None]:
+    try:
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        if decoded_token.get("type") != "email_verification":
+            return None
+        return decoded_token["sub"]
+    except jwt.JWTError:
+        return None

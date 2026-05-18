@@ -57,7 +57,7 @@ def ensure_company_columns():
     add_column_safely("products", "max_discount_pct", "Integer")
     add_column_safely("products", "manual_content", "TEXT")
             
-    # Create user_companies association table
+    # Create user_companies association table (legacy simple join — kept for one release).
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_companies (
             user_id TEXT NOT NULL,
@@ -67,17 +67,74 @@ def ensure_company_columns():
             FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
         )
     """)
-    print("Ensured 'user_companies' table exists.")
+    print("Ensured 'user_companies' table exists (legacy).")
 
     # Migration: Move existing company_id from users to user_companies
     cursor.execute("SELECT id, company_id FROM users WHERE company_id IS NOT NULL")
     existing_assignments = cursor.fetchall()
-    
     for u_id, c_id in existing_assignments:
         cursor.execute("INSERT OR IGNORE INTO user_companies (user_id, company_id) VALUES (?, ?)", (u_id, c_id))
-    
     if existing_assignments:
-        print(f"Migrated {len(existing_assignments)} company assignments to the new association table.")
+        print(f"Migrated {len(existing_assignments)} company assignments to the legacy association table.")
+
+    # Create the new rich user_company_assignments table (D1 from build prompt 01).
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_company_assignments (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            company_id TEXT NOT NULL,
+            role_in_company TEXT NOT NULL,
+            manager_id TEXT,
+            assigned_by TEXT,
+            assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_primary BOOLEAN DEFAULT 0,
+            status TEXT DEFAULT 'active',
+            UNIQUE (user_id, company_id),
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
+            FOREIGN KEY (manager_id) REFERENCES users (id)
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS ix_uca_user ON user_company_assignments(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS ix_uca_company ON user_company_assignments(company_id)")
+    print("Ensured 'user_company_assignments' table exists.")
+
+    # Backfill UCA rows from users.company_id for Manager/Agent/SalesRep/Reviewer/Curator users.
+    backfill_roles = ("Manager", "Agent", "SalesRep", "Reviewer", "Curator")
+    cursor.execute(
+        f"SELECT id, company_id, role FROM users WHERE company_id IS NOT NULL AND role IN ({','.join('?' * len(backfill_roles))})",
+        backfill_roles,
+    )
+    rich_assignments = cursor.fetchall()
+    import uuid as _uuid
+    for u_id, c_id, role in rich_assignments:
+        # role_in_company: collapse legacy SalesRep into Agent.
+        ric = "Agent" if role == "SalesRep" else role
+        new_id = str(_uuid.uuid4())
+        cursor.execute(
+            "INSERT OR IGNORE INTO user_company_assignments "
+            "(id, user_id, company_id, role_in_company, is_primary, status) "
+            "VALUES (?, ?, ?, ?, 1, 'active')",
+            (new_id, u_id, c_id, ric),
+        )
+    if rich_assignments:
+        print(f"Backfilled {len(rich_assignments)} user_company_assignments rows.")
+
+    # Create auth_events table (for Admin + Auditor).
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS auth_events (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            kind TEXT NOT NULL,
+            metadata JSON,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS ix_ae_user ON auth_events(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS ix_ae_kind ON auth_events(kind)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS ix_ae_created ON auth_events(created_at)")
+    print("Ensured 'auth_events' table exists.")
         
     # FORCE SYNC: Ensure dinkar10012@gmail.com has a company_id!
     cursor.execute("SELECT id FROM companies LIMIT 1")

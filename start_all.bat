@@ -1,12 +1,12 @@
 @echo off
 echo Starting Backend and Frontend...
 
-:: Start Backend in a new window
-:: Points to .venv in the project root
+:: Backend (FastAPI on :8000)
 start "Sales RAG Backend" cmd /k "cd backend && ..\.venv\Scripts\activate && uvicorn app.main:app --reload"
 
-:: Start Frontend in a new window
+:: Frontend (Next.js on :3000)
 start "Sales RAG Frontend" cmd /k "cd frontend && npm run dev"
 
-echo Both processes are starting in separate windows.
+echo Backend  -> http://127.0.0.1:8000  (docs at /docs)
+echo Frontend -> http://localhost:3000
 pause

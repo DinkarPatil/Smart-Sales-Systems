@@ -1,58 +1,54 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import traceback
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from app.api.endpoints import auth, admin, manager, owner, sales_rep, webhook
-from app.db.database import init_db, get_db
-from app.models.models import User, UserRole
+
+from app.api.v1 import api_router
 from app.core.config import settings
+from app.core.logging import configure_logging, get_logger
 from app.db.ensure_columns import ensure_company_columns
+from app.db.session import init_db
+
+configure_logging()
+logger = get_logger("app")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    with open("error.txt", "w") as f:
-        f.write(traceback.format_exc())
-    return JSONResponse(status_code=500, content={"message": str(exc)})
-
-# CORS
+# CORS — allow the Next.js dev server and any configured frontend origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_event():
-    # Ensure database columns are up-to-date
-    ensure_company_columns()
-    # Initialize DB (create tables if none exist)
-    await init_db()
 
-# Routers
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
-app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin"])
-app.include_router(manager.router, prefix=f"{settings.API_V1_STR}/manager", tags=["manager"])
-app.include_router(owner.router, prefix=f"{settings.API_V1_STR}/owner", tags=["owner"])
-app.include_router(sales_rep.router, prefix=f"{settings.API_V1_STR}/sales", tags=["sales"])
-app.include_router(webhook.router, prefix=f"{settings.API_V1_STR}/webhook", tags=["webhook"])
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception during request: %s %s", request.method, request.url)
+    return JSONResponse(status_code=500, content={"message": str(exc)})
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    logger.info("Running schema sync...")
+    ensure_company_columns()
+    logger.info("Initializing database...")
+    await init_db()
+    logger.info("Startup complete.")
+
+
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Sales RAG Chatbot API"}
+    return {"message": "Welcome to Sales RAG Chatbot API", "docs": "/docs"}
 
-@app.get("/debug")
-def debug_sql():
-    import sqlite3
-    conn = sqlite3.connect('sales_chatbot.db')
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA table_info(activity_logs)")
-    return {"cols": [c[1] for c in cursor.fetchall()]}
+
+@app.get("/healthz")
+def healthcheck():
+    return {"status": "ok"}
